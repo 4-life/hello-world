@@ -1,0 +1,32 @@
+services:
+  my-app-prodiction:
+    image: my-app-prodiction
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    env_file: "../../.env"
+    volumes:
+      - ../..:/app            # mount local source code into container
+      - /app/node_modules     # prevent overwriting node_modules from host
+    networks:
+      - my_network
+
+  db:
+    image: postgres:latest
+    env_file: "../../.env"
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - my_network
+
+
+volumes:
+  postgres_data:
+
+networks:
+  my_network:
+    name: my_network
+    driver: bridge

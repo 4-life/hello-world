@@ -1,0 +1,54 @@
+name: Deploy to production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -f docker/production/Dockerfile \
+            -t my-app-production .
+
+      - name: Save Docker image
+        run: docker save my-app-production | gzip > my-app.tar.gz
+
+      - name: Copy image to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "my-app.tar.gz"
+          target: "/tmp"
+
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd ${{ secrets.APP_DIR }}
+
+            docker load < /tmp/my-app.tar.gz
+
+            echo "Running DB migrations..."
+            docker run --rm \
+              --env-file .env.production \
+              --network my_network \
+              my-app:latest \
+              npm run migration:run
+
+            echo "Deploying app..."
+            docker compose -f docker-compose.prod.yml up -d
