@@ -1,6 +1,6 @@
 services:
-  my-app-prodiction:
-    image: my-app-prodiction
+  app-prodiction:
+    image: app
     depends_on:
       - db
     ports:

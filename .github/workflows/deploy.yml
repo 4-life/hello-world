@@ -26,7 +26,7 @@ jobs:
             -t app .
 
       - name: Save Docker image
-        run: docker save app | gzip > my-app.tar.gz
+        run: docker save app | gzip > app.tar.gz
 
       - name: Copy image to server
         uses: appleboy/scp-action@v0.1.7
@@ -35,7 +35,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "my-app.tar.gz"
+          source: "app.tar.gz"
           target: "/tmp"
 
       - name: Deploy on server
@@ -65,13 +65,13 @@ jobs:
             CLIENT_SECRET_GOOGLE=${{ secrets.CLIENT_SECRET_GOOGLE }}
             EOF
 
-            docker load < /tmp/my-app.tar.gz
+            docker load < /tmp/app.tar.gz
 
             echo "Running DB migrations..."
             docker run --rm \
               --env-file .env \
               --network my_network \
-              my-app:latest \
+              app:latest \
               npm run migration:run
 
             echo "Deploying app..."
