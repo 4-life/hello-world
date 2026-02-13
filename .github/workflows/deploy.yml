@@ -47,7 +47,6 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             set -e
-            cd ./app
 
             echo "Creating .env file..."
 
