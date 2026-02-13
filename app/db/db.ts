@@ -2,8 +2,6 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import entities from './entities';
 
-let dataSource: DataSource | null = null
-
 function getDatabaseUrl() {
   const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB } = process.env
 
