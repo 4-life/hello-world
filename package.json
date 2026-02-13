@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "build": "next build",
+    "dev": "next dev",
     "start-prod": "node .next/standalone/server.js",
     "migration:run": "ts-node app/db/runMigrations.ts",
     "start": "docker compose -f docker/development/compose.yaml up"
@@ -33,7 +34,7 @@
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
-    "baseline-browser-mapping": "^2.9.17",
+    "baseline-browser-mapping": "^2.9.19",
     "typescript": "^5.7.2"
   }
 }

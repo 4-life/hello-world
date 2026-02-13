@@ -13,13 +13,13 @@ export const authOptions: AuthOptions = {
   },
   providers: [
     GithubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      clientId: process.env.CLIENT_ID_GITHUB!,
+      clientSecret: process.env.CLIENT_SECRET_GITHUB!,
     }),
 
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.CLIENT_ID_GOOGLE!,
+      clientSecret: process.env.CLIENT_SECRET_GOOGLE!,
       httpOptions: {
         timeout: 10000,
       },

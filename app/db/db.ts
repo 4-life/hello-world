@@ -5,14 +5,16 @@ import entities from './entities';
 
 dotenv.config();
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set');
+if (!process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_HOST || !process.env.DB_NAME) {
+  throw new Error('Database environment variables is not set');
 }
+
+const url = `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:5432/${process.env.DB_NAME}`;
 
 // Create and export TypeORM DataSource
 export const db = new DataSource({
   type: 'postgres',
-  url: process.env.DATABASE_URL,
+  url,
   username: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   synchronize: false, // set true only for dev (auto creates tables)

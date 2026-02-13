@@ -4,10 +4,13 @@ on:
   push:
     branches:
       - main
+      - staging
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
       - name: Checkout repo
@@ -28,6 +31,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
           source: "my-app.tar.gz"
           target: "/tmp"
 
@@ -37,15 +41,32 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
           script: |
             set -e
-            cd ${{ secrets.APP_DIR }}
+            cd ./my-app-production
+
+            echo "Creating .env file..."
+
+            cat > .env <<EOF
+            NODE_ENV=production
+            NEXT_PUBLIC_API_URL=https://hello-world.website
+            NEXTAUTH_URL=https://hello-world.website
+            POSTGRES_USER=${{ variables.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_DB=${{ variables.POSTGRES_DB }}
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+            CLIENT_ID_GITHUB=${{ secrets.CLIENT_ID_GITHUB }}
+            CLIENT_SECRET_GITHUB=${{ secrets.CLIENT_SECRET_GITHUB }}
+            CLIENT_ID_GOOGLE=${{ secrets.CLIENT_ID_GOOGLE }}
+            CLIENT_SECRET_GOOGLE=${{ secrets.CLIENT_SECRET_GOOGLE }}
+            EOF
 
             docker load < /tmp/my-app.tar.gz
 
             echo "Running DB migrations..."
             docker run --rm \
-              --env-file .env.production \
+              --env-file .env \
               --network my_network \
               my-app:latest \
               npm run migration:run
