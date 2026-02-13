@@ -22,6 +22,20 @@ RUN \
 # 2. Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+ARG NEXTAUTH_SECRET
+ARG DATABASE_URL
+ARG CLIENT_ID_GITHUB
+ARG CLIENT_SECRET_GITHUB
+ARG CLIENT_ID_GOOGLE
+ARG CLIENT_SECRET_GOOGLE
+
+ENV NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+ENV DATABASE_URL=$DATABASE_URL
+ENV CLIENT_ID_GITHUB=$CLIENT_ID_GITHUB
+ENV CLIENT_SECRET_GITHUB=$CLIENT_SECRET_GITHUB
+ENV CLIENT_ID_GOOGLE=$CLIENT_ID_GOOGLE
+ENV CLIENT_SECRET_GOOGLE=$CLIENT_SECRET_GOOGLE
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
@@ -30,7 +44,7 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV=productio
+ENV NODE_ENV=production
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing

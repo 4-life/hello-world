@@ -20,10 +20,10 @@ jobs:
         run: |
           docker build \
             -f docker/production/Dockerfile \
-            -t my-app-production .
+            -t app .
 
       - name: Save Docker image
-        run: docker save my-app-production | gzip > my-app.tar.gz
+        run: docker save app | gzip > my-app.tar.gz
 
       - name: Copy image to server
         uses: appleboy/scp-action@v0.1.7
@@ -44,7 +44,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             set -e
-            cd ./my-app-production
+            cd ./app
 
             echo "Creating .env file..."
 
