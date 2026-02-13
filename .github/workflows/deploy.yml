@@ -75,4 +75,4 @@ jobs:
               npm run migration:run
 
             echo "Deploying app..."
-            docker compose -f docker-compose.prod.yml up -d
+            docker compose -f ./docker/production/compose.yaml up -d
