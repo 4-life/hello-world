@@ -19,9 +19,9 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
-            --build-arg POSTGRES_USER=${{ vars.POSTGRES_USER }} \
-            --build-arg POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
-            --build-arg POSTGRES_DB=${{ vars.POSTGRES_DB }} \
+            --build-arg POSTGRES_USER="${{ vars.POSTGRES_USER }}" \
+            --build-arg POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
+            --build-arg POSTGRES_DB="${{ vars.POSTGRES_DB }}" \
             -f docker/production/Dockerfile \
             -t app .
 
