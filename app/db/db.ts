@@ -1,24 +1,23 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
-import dotenv from 'dotenv';
 import entities from './entities';
 
-dotenv.config();
+let dataSource: DataSource | null = null
 
-const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB } = process.env;
+function getDatabaseUrl() {
+  const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB } = process.env
 
-if (!POSTGRES_USER || !POSTGRES_PASSWORD || !POSTGRES_DB) {
-  throw new Error('Database environment variables is not set');
+  if (!POSTGRES_USER || !POSTGRES_PASSWORD || !POSTGRES_DB) {
+    throw new Error('Database environment variables is not set')
+  }
+
+  return `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}`
 }
-
-const url = `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}`;
 
 // Create and export TypeORM DataSource
 export const db = new DataSource({
   type: 'postgres',
-  url,
-  username: POSTGRES_USER,
-  password: POSTGRES_PASSWORD,
+  url: getDatabaseUrl(),
   synchronize: false, // set true only for dev (auto creates tables)
   logging: false,
   entities,
