@@ -56,6 +56,10 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
+# Copy migration runner and migration files
+COPY --from=builder /app/app/db/runMigrations.js ./app/db/runMigrations.js
+COPY --from=builder /app/app/db/migrations ./app/db/migrations
+
 EXPOSE 3000
 
 CMD ["node", "server.js"]
