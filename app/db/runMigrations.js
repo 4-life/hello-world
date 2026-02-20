@@ -1,4 +1,3 @@
-require('dotenv/config');
 const { DataSource } = require('typeorm');
 const path = require('path');
 
