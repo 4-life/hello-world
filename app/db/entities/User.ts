@@ -128,13 +128,13 @@ export class UpdateUserInput {
 
 @InputType()
 export class UsersFilter {
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   id?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   login?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   pinnedPostId?: string;
 
   @Field(() => UserRole, { nullable: true })
