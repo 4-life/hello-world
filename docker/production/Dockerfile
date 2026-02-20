@@ -18,6 +18,15 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
+# 1b. Production-only dependencies (for migration runner)
+FROM base AS prod-deps
+RUN apk add --no-cache libc6-compat python3 make g++
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
+
 
 # 2. Rebuild the source code only when needed
 FROM base AS builder
@@ -55,6 +64,10 @@ ENV NODE_ENV=production
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+
+# Overwrite node_modules with full production deps so migration runner
+# can find typeorm, pg, bcrypt, etc. (not traced by Next.js standalone)
+COPY --from=prod-deps /app/node_modules ./node_modules
 
 # Copy migration runner and migration files
 COPY --from=builder /app/app/db/runMigrations.js ./app/db/runMigrations.js
