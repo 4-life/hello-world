@@ -73,7 +73,7 @@ jobs:
             docker compose -f ./docker/production/compose.yaml up -d db
 
             echo "Running migrations..."
-            docker compose -f ./docker/production/compose.yaml run --rm app-production npm run migration:run
+            docker run --rm --network my_network --env-file .env app:latest node app/db/runMigrations.js
 
             echo "Starting application..."
             docker compose -f ./docker/production/compose.yaml up -d
