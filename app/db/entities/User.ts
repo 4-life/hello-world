@@ -137,7 +137,7 @@ export class UsersFilter {
   @Field({ nullable: true })
   pinnedPostId?: string;
 
-  @Field({ nullable: true })
+  @Field(() => UserRole, { nullable: true })
   role?: UserRole;
 }
 
