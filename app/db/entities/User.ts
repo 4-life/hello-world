@@ -19,7 +19,7 @@ registerEnumType(UserRole, {
   description: 'The user roles.',
 });
 
-@ObjectType({ description: 'Users table. This is the main user table.' })
+@ObjectType('User', { description: 'Users table. This is the main user table.' })
 @Entity({ name: 'users' })
 export class User {
   @Field(() => ID)
@@ -99,7 +99,7 @@ export class User {
   }
 }
 
-@InputType()
+@InputType('UpdateUserInput')
 export class UpdateUserInput {
   @Field()
   login: string;
@@ -126,7 +126,7 @@ export class UpdateUserInput {
   avatar?: string;
 }
 
-@InputType()
+@InputType('UsersFilter')
 export class UsersFilter {
   @Field(() => String, { nullable: true })
   id?: string;
@@ -141,7 +141,7 @@ export class UsersFilter {
   role?: UserRole;
 }
 
-@ObjectType()
+@ObjectType('PaginatedUsersResponse')
 export class PaginatedUsersResponse {
   @Field(() => [User])
   items: User[];

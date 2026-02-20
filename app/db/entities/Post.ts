@@ -3,7 +3,7 @@ import type { Relation } from 'typeorm';
 import { ObjectType, Field, ID, InputType } from 'type-graphql';
 import { User } from '.';
 
-@ObjectType()
+@ObjectType('Post')
 @Entity({ name: 'posts' })
 export class Post {
   @Field(() => ID)
@@ -23,7 +23,7 @@ export class Post {
   author: Relation<User>;
 }
 
-@InputType()
+@InputType('CreatePostInput')
 export class CreatePostInput {
   @Field()
   title: string;

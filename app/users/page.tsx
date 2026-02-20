@@ -21,6 +21,7 @@ export default async function UsersPage({ searchParams }: Props) {
   const { data, error } = await getUsers({ role }, { limit, offset });
 
   if (error) {
+    console.error(error);
     return <p>{error.message}</p>;
   }
 

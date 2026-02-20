@@ -18,8 +18,8 @@ export class UserResolver {
   @Authorized()
   @Query(() => PaginatedUsersResponse)
   async users(
-    @Arg('filter', { nullable: true }) filter?: UsersFilter,
-    @Arg('pagination', { nullable: true }) pagination?: PaginationInput
+    @Arg('filter', () => UsersFilter, { nullable: true }) filter?: UsersFilter,
+    @Arg('pagination', () => PaginationInput, { nullable: true }) pagination?: PaginationInput
   ) {
     const skip = (pagination?.limit ?? 10) * ((pagination?.offset ?? 0) - 1);
     const where: any = {};
