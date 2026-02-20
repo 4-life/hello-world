@@ -5,6 +5,7 @@ DOMAIN_NAME="hello-world.website"
 EMAIL="admin@hello-world.website"
 APP_DIR=~/app
 SWAP_SIZE="1G"
+REPO_URL="https://github.com/4-life/hello-world.git"
 
 # Update package list and upgrade existing packages
 sudo apt update && sudo apt upgrade -y
@@ -56,6 +57,16 @@ fi
 # Ensure Docker starts on boot and start Docker service
 sudo systemctl enable docker
 sudo systemctl start docker
+
+# Clone the Git repository
+if [ -d "$APP_DIR" ]; then
+  echo "Directory $APP_DIR already exists. Pulling latest changes..."
+  cd $APP_DIR && git pull
+else
+  echo "Cloning repository from $REPO_URL..."
+  git clone $REPO_URL $APP_DIR
+  cd $APP_DIR
+fi
 
 # Install Nginx
 sudo apt install nginx -y
