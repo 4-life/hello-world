@@ -19,6 +19,11 @@ sudo swapon /swapfile
 # Make swap permanent
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 
+# Open 80 port for HTTP and 443 port for HTTPS
+sudo apt install ufw -y
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
 # Install Docker
 sudo apt install apt-transport-https ca-certificates curl software-properties-common -y
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -

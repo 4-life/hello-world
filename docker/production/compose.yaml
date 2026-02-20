@@ -1,14 +1,11 @@
 services:
-  app-prodiction:
+  app-production:
     image: app
     depends_on:
       - db
     ports:
       - "3000:3000"
     env_file: "../../.env"
-    volumes:
-      - ../..:/app            # mount local source code into container
-      - /app/node_modules     # prevent overwriting node_modules from host
     networks:
       - my_network
 

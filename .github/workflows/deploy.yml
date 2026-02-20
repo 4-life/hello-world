@@ -64,14 +64,14 @@ jobs:
             CLIENT_SECRET_GOOGLE=${{ secrets.CLIENT_SECRET_GOOGLE }}
             EOF
 
+            echo "Loading image..."
             docker load < /tmp/app.tar.gz
 
-            echo "Running DB migrations..."
-            docker run --rm \
-              --env-file .env \
-              --network my_network \
-              app:latest \
-              npm run migration:run
+            echo "Starting database..."
+            docker compose -f ./docker/production/compose.yaml up -d db
 
-            echo "Deploying app..."
+            echo "Running migrations..."
+            docker compose -f ./docker/production/compose.yaml run --rm app-production npm run migration:run
+
+            echo "Starting application..."
             docker compose -f ./docker/production/compose.yaml up -d

@@ -11,3 +11,24 @@ Based on [Nextjs guide](https://nextjs.org/docs/app/guides/self-hosting)
 - Images optimization
 - Auth provider
 - CI\CD
+
+## Quickstart
+
+1. **SSH into your server**:
+
+   ```bash
+   ssh root@your_server_ip
+   ```
+
+2. **Download the deployment script**:
+
+   ```bash
+   curl -o ~/deploy.sh https://raw.githubusercontent.com/4-life/hello-world/main/deploy.sh
+   ```
+
+3. **Run the deployment script**:
+
+   ```bash
+   chmod +x ~/deploy.sh
+   ./deploy.sh
+   ```
