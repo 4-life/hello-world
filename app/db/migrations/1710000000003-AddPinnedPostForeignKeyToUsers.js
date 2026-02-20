@@ -1,7 +1,5 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
-
-export class AddPinnedPostForeignKeyToUsers1710000000004 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {
+class AddPinnedPostForeignKeyToUsers1710000000004 {
+  async up(queryRunner) {
     await queryRunner.query(`
       ALTER TABLE users
       ADD CONSTRAINT fk_users_pinned_post
@@ -10,10 +8,12 @@ export class AddPinnedPostForeignKeyToUsers1710000000004 implements MigrationInt
     `);
   }
 
-  public async down(queryRunner: QueryRunner): Promise<void> {
+  async down(queryRunner) {
     await queryRunner.query(`
       ALTER TABLE users
       DROP CONSTRAINT fk_users_pinned_post;
     `);
   }
 }
+
+module.exports = { AddPinnedPostForeignKeyToUsers1710000000004 };

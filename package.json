@@ -5,7 +5,7 @@
     "build": "next build",
     "dev": "next dev",
     "start-prod": "node .next/standalone/server.js",
-    "migration:run": "ts-node app/db/runMigrations.ts",
+    "migration:run": "node app/db/runMigrations.js",
     "start": "docker compose -f docker/development/compose.yaml up"
   },
   "dependencies": {

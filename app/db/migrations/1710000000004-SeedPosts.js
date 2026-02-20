@@ -1,17 +1,15 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
-
-export class SeedPosts1710000000003 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {
+class SeedPosts1710000000003 {
+  async up(queryRunner) {
     // find existing users
     const users = await queryRunner.query(`
       SELECT id, login FROM users ORDER BY login ASC;
     `);
 
-    const user = users.find((u: any) => u.login === "user");
-    const admin = users.find((u: any) => u.login === "admin");
+    const user = users.find((u) => u.login === 'user');
+    const admin = users.find((u) => u.login === 'admin');
 
     if (!user || !admin) {
-      throw new Error("SeedUsers must be executed before SeedPosts");
+      throw new Error('SeedUsers must be executed before SeedPosts');
     }
 
     await queryRunner.query(
@@ -25,9 +23,11 @@ export class SeedPosts1710000000003 implements MigrationInterface {
     );
   }
 
-  public async down(queryRunner: QueryRunner): Promise<void> {
+  async down(queryRunner) {
     await queryRunner.query(`
       DELETE FROM posts WHERE title IN ('Hello World', 'Admin Announcement');
     `);
   }
 }
+
+module.exports = { SeedPosts1710000000003 };

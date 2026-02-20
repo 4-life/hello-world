@@ -1,29 +1,27 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
-
-export class SeedPinnedPostForFirstUser1710000000006 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {
+class SeedPinnedPostForFirstUser1710000000006 {
+  async up(queryRunner) {
     // get the earliest user
     const [firstUser] = await queryRunner.query(`
-      SELECT id 
+      SELECT id
       FROM users
-      ORDER BY "createdDate" ASC 
+      ORDER BY "createdDate" ASC
       LIMIT 1;
     `);
 
     if (!firstUser) {
-      console.warn("No users found, skipping pinned post seed.");
+      console.warn('No users found, skipping pinned post seed.');
       return;
     }
 
     const [firstPost] = await queryRunner.query(`
-      SELECT id 
+      SELECT id
       FROM posts
-      ORDER BY "createdDate" ASC 
+      ORDER BY "createdDate" ASC
       LIMIT 1;
     `);
 
     if (!firstPost) {
-      console.warn("No posts found, skipping pinned post seed.");
+      console.warn('No posts found, skipping pinned post seed.');
       return;
     }
 
@@ -38,11 +36,11 @@ export class SeedPinnedPostForFirstUser1710000000006 implements MigrationInterfa
     );
   }
 
-  public async down(queryRunner: QueryRunner): Promise<void> {
+  async down(queryRunner) {
     const [firstUser] = await queryRunner.query(`
-      SELECT id 
+      SELECT id
       FROM users
-      ORDER BY "createdDate" ASC 
+      ORDER BY "createdDate" ASC
       LIMIT 1;
     `);
 
@@ -58,3 +56,5 @@ export class SeedPinnedPostForFirstUser1710000000006 implements MigrationInterfa
     );
   }
 }
+
+module.exports = { SeedPinnedPostForFirstUser1710000000006 };

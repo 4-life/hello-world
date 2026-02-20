@@ -1,7 +1,5 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
-
-export class CreateUsersTable1710000000000 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {
+class CreateUsersTable1710000000000 {
+  async up(queryRunner) {
     // enable uuid generator
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
 
@@ -34,9 +32,11 @@ export class CreateUsersTable1710000000000 implements MigrationInterface {
     `);
   }
 
-  public async down(queryRunner: QueryRunner): Promise<void> {
+  async down(queryRunner) {
     await queryRunner.query(`ALTER TABLE users DROP CONSTRAINT fk_users_pinned_post`);
     await queryRunner.query(`DROP TABLE users`);
     await queryRunner.query(`DROP TYPE user_role`);
   }
 }
+
+module.exports = { CreateUsersTable1710000000000 };

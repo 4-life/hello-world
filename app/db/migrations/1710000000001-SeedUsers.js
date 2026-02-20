@@ -1,10 +1,9 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
-import * as bcrypt from "bcrypt";
+const bcrypt = require('bcrypt');
 
-export class SeedUsers1710000000001 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {
-    const userPassword = await bcrypt.hash("user", 10);
-    const adminPassword = await bcrypt.hash("admin", 10);
+class SeedUsers1710000000001 {
+  async up(queryRunner) {
+    const userPassword = await bcrypt.hash('user', 10);
+    const adminPassword = await bcrypt.hash('admin', 10);
 
     await queryRunner.query(
       `
@@ -17,9 +16,11 @@ export class SeedUsers1710000000001 implements MigrationInterface {
     );
   }
 
-  public async down(queryRunner: QueryRunner): Promise<void> {
+  async down(queryRunner) {
     await queryRunner.query(`
       DELETE FROM users WHERE login IN ('user', 'admin');
     `);
   }
 }
+
+module.exports = { SeedUsers1710000000001 };

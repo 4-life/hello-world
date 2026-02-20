@@ -19,7 +19,7 @@ export const db = new DataSource({
   synchronize: false, // set true only for dev (auto creates tables)
   logging: false,
   entities,
-  migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
+  migrations: [__dirname + '/migrations/**/*.js'],
   subscribers: [],
 });
 

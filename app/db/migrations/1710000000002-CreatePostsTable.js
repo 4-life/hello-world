@@ -1,7 +1,5 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
-
-export class CreatePostsTable1710000000002 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {
+class CreatePostsTable1710000000002 {
+  async up(queryRunner) {
     // create table
     await queryRunner.query(`
       CREATE TABLE posts (
@@ -24,8 +22,10 @@ export class CreatePostsTable1710000000002 implements MigrationInterface {
     `);
   }
 
-  public async down(queryRunner: QueryRunner): Promise<void> {
+  async down(queryRunner) {
     await queryRunner.query(`ALTER TABLE posts DROP CONSTRAINT fk_posts_author`);
     await queryRunner.query(`DROP TABLE posts`);
   }
 }
+
+module.exports = { CreatePostsTable1710000000002 };
