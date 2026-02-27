@@ -1,4 +1,5 @@
-import { AuthChecker, buildSchema, type GraphQLSchema } from 'type-graphql';
+import { AuthChecker, buildSchema } from 'type-graphql';
+import { type GraphQLSchema } from 'graphql';
 import { UserResolver } from './resolvers/UserResolver';
 import { PostResolver } from './resolvers/PostResolver';
 import { Context } from '@/server/context';
