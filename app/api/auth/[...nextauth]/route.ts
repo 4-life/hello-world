@@ -40,14 +40,14 @@ export const authOptions: AuthOptions = {
 
         if (!user || !user.password) return null;
 
-        const ok = await bcrypt.compare(credentials!.password, user.password);
+        const isOk = await bcrypt.compare(credentials!.password, user.password);
 
-        return ok ? { id: user.id, email: user.email } : null;
+        return isOk ? { id: user.id, email: user.email } : null;
       },
     }),
   ],
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account: _account }) {
       const repo = db.getRepository(User);
 
       if (!user.email) return false;
@@ -83,7 +83,10 @@ export const authOptions: AuthOptions = {
 
     async session({ session, token }) {
       // ensure session.user exists before assigning id
-      (session as any).user = { ...(session?.user ?? {}), userId: token.userId! };
+      (session as { user: Record<string, unknown> }).user = {
+        ...(session?.user ?? {}),
+        userId: token.userId!,
+      };
       return session;
     },
   },

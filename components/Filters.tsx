@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { UserRole } from '@/app/db/entities/UserRole';
 
-export default function Filters() {
+export default function Filters(): React.JSX.Element {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -13,7 +13,7 @@ export default function Filters() {
     return searchParams.get('role') as UserRole | null;
   }, [searchParams]);
 
-  const updateQuery = (role: UserRole) => {
+  const updateQuery = (role: UserRole): void => {
     const params = new URLSearchParams(searchParams.toString());
 
     if (!role) {

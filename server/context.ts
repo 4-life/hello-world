@@ -18,8 +18,7 @@ export async function createContext(req: Request): Promise<Context> {
           ? (session.user as { userId: string }).userId
           : null,
     };
-  } catch (err) {
-    console.error('Context creation failed', err);
+  } catch {
     return { userId: null };
   }
 }

@@ -35,14 +35,15 @@ const GET_USERS = gql`
   }
 `;
 
-
-export default cache(async (filter: UsersFilter, pagination: PaginationInput) => {
-  const client = getClient();
-  const { data, error } = await client.query<UsersQuery>({
-    query: GET_USERS,
-    variables: { filter, pagination },
-    fetchPolicy: 'network-only',
-    errorPolicy: 'all',
-  });
-  return { data, error };
-});
+export default cache(
+  async (filter: UsersFilter, pagination: PaginationInput) => {
+    const client = getClient();
+    const { data, error } = await client.query<UsersQuery>({
+      query: GET_USERS,
+      variables: { filter, pagination },
+      fetchPolicy: 'network-only',
+      errorPolicy: 'all',
+    });
+    return { data, error };
+  },
+);

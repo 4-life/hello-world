@@ -7,6 +7,9 @@ export const DELETE_USER = gql`
   }
 `;
 
-export default function useDeleteUser() {
+export default function useDeleteUser(): useMutation.ResultTuple<
+  Record<'deleteUser', boolean>,
+  Record<string, unknown>
+> {
   return useMutation<Record<'deleteUser', boolean>>(DELETE_USER);
 }

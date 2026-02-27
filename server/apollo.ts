@@ -5,7 +5,7 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
 
 let server: ApolloServer;
 
-export async function getApolloServer() {
+export async function getApolloServer(): Promise<ApolloServer> {
   if (!server) {
     if (!db.isInitialized) {
       await db.initialize();
@@ -13,16 +13,18 @@ export async function getApolloServer() {
 
     const schema = await buildGqlSchema();
 
+    const plugins =
+      process.env.NODE_ENV === 'development'
+        ? [
+            ApolloServerPluginLandingPageLocalDefault({
+              embed: true,
+            }),
+          ]
+        : [];
+
     server = new ApolloServer({
       schema,
-      plugins:
-        process.env.NODE_ENV === 'development'
-          ? [
-              ApolloServerPluginLandingPageLocalDefault({
-                embed: true,
-              }),
-            ]
-          : [],
+      plugins,
     });
   }
   return server;

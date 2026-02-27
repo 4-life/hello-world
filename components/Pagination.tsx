@@ -10,7 +10,11 @@ interface Props {
   total: number;
 }
 
-export default function Pagination({ page, total, limit }: Props) {
+export default function Pagination({
+  page,
+  total,
+  limit,
+}: Props): React.JSX.Element {
   const searchParams = useSearchParams();
   return (
     <div>
@@ -21,7 +25,7 @@ export default function Pagination({ page, total, limit }: Props) {
       )}
 
       <span>
-        Page {page} of {Math.ceil(total/limit)} {' '}
+        Page {page} of {Math.ceil(total / limit)}{' '}
       </span>
 
       {page < total && (

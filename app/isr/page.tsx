@@ -1,22 +1,27 @@
 import { revalidatePath } from 'next/cache';
 import { FreshnessTimer } from './timer';
 
-async function revalidateAction() {
+async function revalidateAction(): Promise<void> {
   'use server';
   revalidatePath('/isr');
 }
 
-async function getPokemon() {
+async function getPokemon(): Promise<{
+  id: number;
+  name: string;
+  type: string[];
+  generatedAt: number;
+}> {
   const randomId = Math.floor(Math.random() * 151) + 1;
   const res = await fetch(`https://api.vercel.app/pokemon/${randomId}`, {
     next: { revalidate: 10 },
   });
-  return res.json();
+  const data = await res.json();
+  return { ...data, generatedAt: Date.now() };
 }
 
-export default async function ISRDemo() {
+export default async function ISRDemo(): Promise<React.JSX.Element> {
   const pokemon = await getPokemon();
-  const generatedAt = Date.now();
 
   return (
     <div>
@@ -24,7 +29,7 @@ export default async function ISRDemo() {
       <p>Pokemon ID: {pokemon.id}</p>
       <p>Name: {pokemon.name}</p>
       <p>Types: {pokemon.type.join(', ')}</p>
-      <FreshnessTimer generatedAt={generatedAt} />
+      <FreshnessTimer generatedAt={pokemon.generatedAt} />
       <form action={revalidateAction}>
         <button type="submit">Revalidate</button>
       </form>

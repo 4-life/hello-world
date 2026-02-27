@@ -6,7 +6,9 @@
     "dev": "next dev",
     "start-prod": "node .next/standalone/server.js",
     "migration:run": "node app/db/runMigrations.js",
-    "start": "docker compose -f docker/development/compose.yaml up"
+    "start": "docker compose -f docker/development/compose.yaml up",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@apollo/client": "^4.0.9",
@@ -34,6 +36,12 @@
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "baseline-browser-mapping": "^2.9.19",
+    "eslint": "^9.39.3",
+    "eslint-config-next": "^16.1.6",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-require-explicit-generics": "^1.0.0",
+    "prettier": "^3.8.1",
     "typescript": "^5.7.2"
   }
 }

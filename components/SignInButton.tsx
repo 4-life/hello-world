@@ -3,7 +3,7 @@
 import { signIn, useSession, signOut } from 'next-auth/react';
 import Image from 'next/image';
 
-export default function SignInButton() {
+export default function SignInButton(): React.JSX.Element {
   const { data, status } = useSession();
 
   if (status === 'loading') {

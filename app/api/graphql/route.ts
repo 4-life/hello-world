@@ -5,19 +5,21 @@ import { NextRequest } from 'next/server';
 
 let handler: ReturnType<typeof startServerAndCreateNextHandler> | null = null;
 
-async function getHandler() {
+async function getHandler(): Promise<
+  ReturnType<typeof startServerAndCreateNextHandler>
+> {
   if (!handler) {
     const server = await getApolloServer();
     handler = startServerAndCreateNextHandler<NextRequest>(server, {
-      context: async (req) => await createContext(req ),
+      context: async (req) => await createContext(req),
     });
   }
   return handler;
 }
 
-export async function GET(request: Request) {
-  const handler = await getHandler();
-  return handler(request);
+export async function GET(request: Request): Promise<Response> {
+  const resolvedHandler = await getHandler();
+  return resolvedHandler(request);
 }
 
 export const POST = GET;

@@ -10,6 +10,7 @@ import {
   PaginationInput,
 } from '@/app/db/entities';
 import type { Context } from '@/server/context';
+import type { FindOptionsWhere } from 'typeorm';
 
 @Resolver(User)
 export class UserResolver {
@@ -19,10 +20,11 @@ export class UserResolver {
   @Query(() => PaginatedUsersResponse)
   async users(
     @Arg('filter', () => UsersFilter, { nullable: true }) filter?: UsersFilter,
-    @Arg('pagination', () => PaginationInput, { nullable: true }) pagination?: PaginationInput
-  ) {
+    @Arg('pagination', () => PaginationInput, { nullable: true })
+    pagination?: PaginationInput,
+  ): Promise<PaginatedUsersResponse> {
     const skip = (pagination?.limit ?? 10) * ((pagination?.offset ?? 0) - 1);
-    const where: any = {};
+    const where: FindOptionsWhere<User> = {};
 
     if (filter?.id) where.id = filter.id;
     if (filter?.login) where.login = filter.login;
@@ -41,12 +43,15 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  async user(@Arg('id') id: string) {
+  async user(@Arg('id') id: string): Promise<User | null> {
     return this.repo.findOne({ where: { id }, relations: ['posts'] });
   }
 
   @Mutation(() => User)
-  async updateProfile(@Ctx() ctx: Context, @Arg('data') data: UpdateUserInput) {
+  async updateProfile(
+    @Ctx() ctx: Context,
+    @Arg('data') data: UpdateUserInput,
+  ): Promise<User> {
     const user = await this.repo.findOneByOrFail({ id: ctx.userId! });
 
     Object.assign(user, data);
@@ -54,7 +59,10 @@ export class UserResolver {
   }
 
   @Mutation(() => User)
-  async signUp(@Arg('email') email: string, @Arg('password') password: string) {
+  async signUp(
+    @Arg('email') email: string,
+    @Arg('password') password: string,
+  ): Promise<User> {
     const repo = this.repo;
 
     if (await repo.findOne({ where: { email } })) {
@@ -73,8 +81,8 @@ export class UserResolver {
   @Mutation(() => User)
   async setPinnedPost(
     @Arg('userId') userId: string,
-    @Arg('postId') postId: string
-  ) {
+    @Arg('postId') postId: string,
+  ): Promise<User> {
     const user = await this.repo.findOne({ where: { id: userId } });
     if (!user) throw new Error('User not found');
 

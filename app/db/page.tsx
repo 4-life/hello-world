@@ -4,7 +4,7 @@ import { User } from './entities/User';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home() {
+export default async function Home(): Promise<React.JSX.Element> {
   const usersRepo = await db.getRepository(User);
 
   const users = await usersRepo.find();

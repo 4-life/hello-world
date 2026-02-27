@@ -2,11 +2,15 @@
 
 import { useState, useEffect } from 'react';
 
-export function FreshnessTimer({ generatedAt }: { generatedAt: number }) {
+export function FreshnessTimer({
+  generatedAt,
+}: {
+  generatedAt: number;
+}): React.JSX.Element {
   const [secondsElapsed, setSecondsElapsed] = useState<number | null>(null);
 
   useEffect(() => {
-    const updateTimer = () => {
+    const updateTimer = (): void => {
       setSecondsElapsed(Math.floor((Date.now() - generatedAt) / 1000));
     };
 

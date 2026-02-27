@@ -1,9 +1,9 @@
-import { ReadonlyURLSearchParams } from "next/navigation";
+import { ReadonlyURLSearchParams } from 'next/navigation';
 
 export function buildQuery(
   searchParams: ReadonlyURLSearchParams,
-  newParams: Record<string, string>
-) {
+  newParams: Record<string, string>,
+): string {
   const params = new URLSearchParams();
 
   Object.entries(searchParams).forEach(([key, value]) => {

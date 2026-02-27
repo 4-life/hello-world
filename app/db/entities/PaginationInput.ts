@@ -1,4 +1,4 @@
-import { InputType, Field, Int } from "type-graphql";
+import { InputType, Field, Int } from 'type-graphql';
 
 @InputType('PaginationInput')
 export class PaginationInput {

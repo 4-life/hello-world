@@ -7,11 +7,11 @@ interface Props {
   id: string;
 }
 
-export default function DeleteUserButton({ id }: Props) {
-  const [deleteUser, { loading }] = useDeleteUser();
+export default function DeleteUserButton({ id }: Props): React.JSX.Element {
+  const [deleteUser, { loading: isLoading }] = useDeleteUser();
   const router = useRouter();
 
-  async function handleDelete() {
+  async function handleDelete(): Promise<void> {
     const { data } = await deleteUser({
       variables: { id },
     });
@@ -24,10 +24,10 @@ export default function DeleteUserButton({ id }: Props) {
   return (
     <button
       onClick={handleDelete}
-      disabled={loading}
+      disabled={isLoading}
       style={{ fontSize: '10pt', padding: '2px 4px' }}
     >
-      {loading ? 'Deleting...' : 'Delete user'}
+      {isLoading ? 'Deleting...' : 'Delete user'}
     </button>
   );
 }

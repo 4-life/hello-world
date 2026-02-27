@@ -4,12 +4,16 @@ import { Suspense } from 'react';
 // from the Promise, so we won't need to config!
 export const dynamic = 'force-dynamic';
 
-async function fetchData(id: number) {
+async function fetchData(id: number): Promise<string> {
   await new Promise((resolve) => setTimeout(resolve, id * 1000));
   return `Data loaded after ${id} second${id > 1 ? 's' : ''}`;
 }
 
-async function AsyncDataComponent({ id }: { id: number }) {
+async function AsyncDataComponent({
+  id,
+}: {
+  id: number;
+}): Promise<React.JSX.Element> {
   const data = await fetchData(id);
   return (
     <div>
@@ -19,7 +23,7 @@ async function AsyncDataComponent({ id }: { id: number }) {
   );
 }
 
-function LoadingCard({ id }: { id: number }) {
+function LoadingCard({ id }: { id: number }): React.JSX.Element {
   return (
     <div>
       <h2>Content {id}</h2>
@@ -28,7 +32,7 @@ function LoadingCard({ id }: { id: number }) {
   );
 }
 
-export default function Streaming() {
+export default function Streaming(): React.JSX.Element {
   return (
     <div>
       <h1>Streaming Demo with Server Components</h1>

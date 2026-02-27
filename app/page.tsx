@@ -1,10 +1,16 @@
 import SignInButton from '@/components/SignInButton';
 import Image from 'next/image';
 
-export default async function Home() {
+export default async function Home(): Promise<React.JSX.Element> {
   return (
     <section>
-      <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '10px',
+          justifyContent: 'space-between',
+        }}
+      >
         <h1>Header</h1>
         <SignInButton />
       </div>

@@ -12,7 +12,9 @@ type Props = {
   };
 };
 
-export default async function UsersPage({ searchParams }: Props) {
+export default async function UsersPage({
+  searchParams,
+}: Props): Promise<React.JSX.Element> {
   const params = await searchParams;
   const role = params.role;
   const offset = Number(params.page ?? 1);
@@ -21,7 +23,6 @@ export default async function UsersPage({ searchParams }: Props) {
   const { data, error } = await getUsers({ role }, { limit, offset });
 
   if (error) {
-    console.error(error);
     return <p>{error.message}</p>;
   }
 

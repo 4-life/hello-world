@@ -10,7 +10,14 @@ import {
   OneToMany,
 } from 'typeorm';
 import type { Relation } from 'typeorm';
-import { ObjectType, Field, ID, InputType, registerEnumType, Int } from 'type-graphql';
+import {
+  ObjectType,
+  Field,
+  ID,
+  InputType,
+  registerEnumType,
+  Int,
+} from 'type-graphql';
 import { Post } from '.';
 import { UserRole } from './UserRole';
 
@@ -19,7 +26,9 @@ registerEnumType(UserRole, {
   description: 'The user roles.',
 });
 
-@ObjectType('User', { description: 'Users table. This is the main user table.' })
+@ObjectType('User', {
+  description: 'Users table. This is the main user table.',
+})
 @Entity({ name: 'users' })
 export class User {
   @Field(() => ID)
@@ -89,12 +98,12 @@ export class User {
   updatedDate: Date;
 
   @BeforeInsert()
-  createDates() {
+  createDates(): void {
     this.createdDate = new Date();
   }
 
   @BeforeUpdate()
-  updateDates() {
+  updateDates(): void {
     this.updatedDate = new Date();
   }
 }

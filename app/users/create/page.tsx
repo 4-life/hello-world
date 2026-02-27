@@ -20,9 +20,18 @@ const CREATE_USER = gql`
   }
 `;
 
-export default function CreateUser() {
+export default function CreateUser(): React.JSX.Element {
   const router = useRouter();
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    login: string;
+    password: string;
+    role: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    avatar: string;
+  }>({
     login: '',
     password: '',
     role: 'USER',
@@ -32,20 +41,22 @@ export default function CreateUser() {
     phone: '',
     avatar: '',
   });
-  const [createUser, { loading, error }] = useMutation<User>(CREATE_USER);
+  const [createUser, { loading: isLoading, error }] =
+    useMutation<User>(CREATE_USER);
 
   function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) {
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ): void {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
-    const { data, error } = await createUser({ variables: { data: form } });
-    console.log({ data, error });
-    if (data) {
+    const { data: mutationData } = await createUser({
+      variables: { data: form },
+    });
+    if (mutationData) {
       router.push('/users');
     }
   }
@@ -124,8 +135,8 @@ export default function CreateUser() {
           onChange={handleChange}
         />
 
-        <button type="submit" disabled={loading}>
-          {loading ? 'Creating...' : 'Create User'}
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? 'Creating...' : 'Create User'}
         </button>
 
         {error && <div style={{ color: 'red' }}>{error.message}</div>}
