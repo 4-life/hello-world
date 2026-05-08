@@ -108,9 +108,7 @@ sudo apt install certbot -y
 sudo certbot certonly --standalone -d $DOMAIN_NAME --non-interactive --agree-tos -m $EMAIL
 
 # Ensure SSL files exist or generate them
-if [ ! -f /etc/letsencrypt/options-ssl-nginx.conf ]; then
-  sudo wget https://raw.githubusercontent.com/certbot/certbot/refs/heads/main/certbot-nginx/src/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf -P /etc/letsencrypt/
-fi
+sudo apt install python3-certbot-nginx -y
 
 if [ ! -f /etc/letsencrypt/ssl-dhparams.pem ]; then
   sudo openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 2048

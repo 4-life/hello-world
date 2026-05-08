@@ -152,8 +152,7 @@ The CI/CD pipeline (GitHub Actions) does:
 ```bash
 ssh root@your_server_ip
 curl -o ~/deploy.sh https://raw.githubusercontent.com/4-life/hello-world/main/deploy.sh
-chmod +x ~/deploy.sh
-./deploy.sh
+chmod +x ~/deploy.sh && ./deploy.sh
 ```
 
 ### Required secrets / vars
@@ -166,3 +165,30 @@ chmod +x ~/deploy.sh
 | `POSTGRES_PASSWORD`, `NEXTAUTH_SECRET` | Secrets |
 | `CLIENT_ID_GITHUB`, `CLIENT_SECRET_GITHUB` | Secrets |
 | `CLIENT_ID_GOOGLE`, `CLIENT_SECRET_GOOGLE` | Secrets |
+
+## Security
+
+### Secrets management
+
+- **No secrets in the Docker image.** The production `Dockerfile` contains no credentials. All environment variables are injected at runtime by the CI/CD pipeline and passed to containers via `env_file`.
+- **No secrets in the repository.** `.env` files are git-ignored. GitHub Actions secrets/variables are the single source of truth — the pipeline writes a `.env` file on the server at deploy time and never commits it.
+- **No secrets in build arguments.** `--build-arg` is not used for sensitive values. Only the image artifact is shipped; credentials are absent from all image layers and `docker inspect` output.
+
+### Container security
+
+- The production container runs as a **non-root user** (`nextjs`, uid 1001). An attacker who achieves RCE inside the container gets a restricted user with no write access outside the app directory.
+- The **migration runner is a separate image** (`app-migrate`). It runs ephemerally (`--rm`) before the app starts and has no access to the running application.
+
+### Server security
+
+- `deploy.sh` creates a dedicated **`deploy` user** (no root, docker group only) for CI/CD SSH access. The root account is not used by the pipeline.
+- SSH access uses **ed25519 key authentication** only. The private key lives exclusively in GitHub Secrets and is never written to disk beyond the server's `authorized_keys`.
+- **UFW** is enabled with only ports 22, 80, and 443 open.
+- **Nginx** sits in front of Next.js and handles SSL termination, HTTP→HTTPS redirect, and rate limiting (10 req/s, burst 20).
+- SSL certificates are issued by **Let's Encrypt** and auto-renewed every 12 hours via cron.
+
+### What to audit when adding a feature
+
+- New environment variables → add to GitHub Secrets/Variables, not to the Dockerfile or source code
+- New endpoints → check that `@Authorized()` is applied where needed in resolvers
+- New file uploads or external calls → validate at the boundary, not inside business logic
