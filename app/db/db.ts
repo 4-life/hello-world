@@ -20,5 +20,9 @@ export const db = new DataSource({
 });
 
 if (databaseUrl) {
-  db.initialize().catch((_err) => {});
+  db.initialize().catch((_err) => {
+    // eslint-disable-next-line no-console
+    console.error('Database connection error:', _err);
+    process.exit(1);
+  });
 }
