@@ -28,8 +28,9 @@ SSH_PORT=56777
 
 if ! id "$SSH_USER" &>/dev/null; then
   sudo useradd -m -s /bin/bash "$SSH_USER"
-  sudo usermod -aG docker "$SSH_USER"
 fi
+
+sudo usermod -aG docker "$SSH_USER"
 
 sudo mkdir -p /home/$SSH_USER/.ssh
 sudo chmod 700 /home/$SSH_USER/.ssh

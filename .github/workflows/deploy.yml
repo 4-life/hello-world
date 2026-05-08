@@ -64,10 +64,11 @@ jobs:
           script: |
             set -e
 
-            mkdir -p ~/app
+            APP_DIR=$HOME/app
+            mkdir -p $APP_DIR
 
             echo "Creating .env file..."
-            cat > ~/app/.env <<EOF
+            cat > $APP_DIR/.env <<EOF
             NODE_ENV=production
             NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
             NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }}
@@ -85,10 +86,10 @@ jobs:
             docker load < /tmp/deploy/app.tar.gz
 
             echo "Starting database..."
-            docker compose -f /tmp/deploy/docker/production/compose.yaml --project-directory ~/app up -d db
+            docker compose -f /tmp/deploy/docker/production/compose.yaml --project-directory $APP_DIR up -d db
 
             echo "Running migrations..."
-            docker run --rm --network my_network --env-file ~/app/.env app node app/db/runMigrations.js
+            docker run --rm --network my_network --env-file $APP_DIR/.env app node app/db/runMigrations.js
 
             echo "Starting application..."
-            docker compose -f /tmp/deploy/docker/production/compose.yaml --project-directory ~/app up -d
+            docker compose -f /tmp/deploy/docker/production/compose.yaml --project-directory $APP_DIR up -d
