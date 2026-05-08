@@ -3,6 +3,7 @@
 FROM node:22-alpine AS base
 RUN apk upgrade --no-cache
 
+# All deps (including devDependencies) — needed for the build step
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -11,6 +12,18 @@ RUN \
   if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
   elif [ -f package-lock.json ]; then npm ci; \
   elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
+
+# Production-only deps — copied into the runner for the migration script
+FROM base AS prod-deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
+RUN \
+  if [ -f yarn.lock ]; then yarn --frozen-lockfile --production; \
+  elif [ -f package-lock.json ]; then npm ci --omit=dev; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --prod; \
   else echo "Lockfile not found." && exit 1; \
   fi
 
@@ -33,6 +46,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/app/db/runMigrations.js ./app/db/runMigrations.js
 COPY --from=builder --chown=nextjs:nodejs /app/app/db/migrations ./app/db/migrations
+COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 USER nextjs
 
