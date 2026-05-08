@@ -2,32 +2,23 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import entities from './entities';
 
-function getDatabaseUrl(): string {
-  const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB } = process.env;
+const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB } = process.env;
 
-  if (!POSTGRES_USER || !POSTGRES_PASSWORD || !POSTGRES_DB) {
-    throw new Error('Database environment variables is not set');
-  }
+const databaseUrl =
+  POSTGRES_USER && POSTGRES_PASSWORD && POSTGRES_DB
+    ? `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}`
+    : null;
 
-  return `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}`;
-}
-
-// Create and export TypeORM DataSource
 export const db = new DataSource({
   type: 'postgres',
-  url: getDatabaseUrl(),
-  synchronize: false, // set true only for dev (auto creates tables)
+  url: databaseUrl ?? undefined,
+  synchronize: false,
   logging: false,
   entities,
   migrations: [__dirname + '/migrations/**/*.js'],
   subscribers: [],
 });
 
-// Initialize connection
-db.initialize()
-  .then(async () => {
-    // Data Source has been initialized
-  })
-  .catch((_err) => {
-    // Error during Data Source initialization
-  });
+if (databaseUrl) {
+  db.initialize().catch((_err) => {});
+}

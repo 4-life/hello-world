@@ -96,23 +96,19 @@ fi
 # Install Nginx
 sudo apt install nginx -y
 
-# Remove old Nginx config (if it exists)
-sudo rm -f /etc/nginx/sites-available/myapp
-sudo rm -f /etc/nginx/sites-enabled/myapp
+# Install Certbot nginx plugin (creates options-ssl-nginx.conf)
+sudo apt install certbot python3-certbot-nginx -y
 
-# Stop Nginx temporarily to allow Certbot to run in standalone mode
-sudo systemctl stop nginx
-
-# Obtain SSL certificate using Certbot standalone mode
-sudo apt install certbot -y
-sudo certbot certonly --standalone -d $DOMAIN_NAME --non-interactive --agree-tos -m $EMAIL
-
-# Ensure SSL files exist or generate them
-sudo apt install python3-certbot-nginx -y
+# Obtain SSL certificate
+sudo certbot certonly --nginx -d $DOMAIN_NAME --non-interactive --agree-tos -m $EMAIL
 
 if [ ! -f /etc/letsencrypt/ssl-dhparams.pem ]; then
   sudo openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 2048
 fi
+
+# Remove old Nginx config (if it exists)
+sudo rm -f /etc/nginx/sites-available/myapp
+sudo rm -f /etc/nginx/sites-enabled/myapp
 
 # Create Nginx config with reverse proxy, SSL support, rate limiting, and streaming support
 sudo cat > /etc/nginx/sites-available/myapp <<EOL
@@ -156,14 +152,15 @@ EOL
 # Create symbolic link if it doesn't already exist
 sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled/myapp
 
-# Restart Nginx to apply the new configuration
+# Kill any stale nginx processes and restart via systemd
+sudo pkill nginx || true
 sudo systemctl restart nginx
 
 # Setup automatic SSL certificate renewal...
 ( crontab -l 2>/dev/null; echo "0 */12 * * * certbot renew --quiet && systemctl reload nginx" ) | crontab -
 
 # Output final message
-SSH_HOST=$(curl -s ifconfig.me)
+SSH_HOST=$(curl -s -4 ifconfig.me)
 PRIVATE_KEY=$(sudo cat /home/$SSH_USER/.ssh/id_ed25519)
 
 echo "
