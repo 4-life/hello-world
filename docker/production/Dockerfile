@@ -20,6 +20,16 @@ RUN \
   fi
 
 # 2. Rebuild the source code only when needed
+# 1b. Minimal dependencies for migration runner only
+FROM base AS migrate-deps
+RUN apk add --no-cache libc6-compat python3 make g++
+
+WORKDIR /app
+
+COPY app/db/migrate-package.json ./package.json
+RUN npm install
+
+
 FROM base AS builder
 WORKDIR /app
 
@@ -41,6 +51,11 @@ RUN adduser -S nextjs -u 1001
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Migration runner dependencies and files
+COPY --from=migrate-deps --chown=nextjs:nodejs /app/node_modules ./migrate_modules
+COPY --from=builder --chown=nextjs:nodejs /app/app/db/runMigrations.js ./app/db/runMigrations.js
+COPY --from=builder --chown=nextjs:nodejs /app/app/db/migrations ./app/db/migrations
 
 USER nextjs
 

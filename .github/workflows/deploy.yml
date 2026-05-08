@@ -38,24 +38,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Build Docker images
-        run: |
-          docker build -f docker/production/Dockerfile -t app .
-          docker build -f docker/production/Dockerfile.migrate -t app-migrate .
+      - name: Build Docker image
+        run: docker build -f docker/production/Dockerfile -t app .
 
-      - name: Save Docker images
-        run: |
-          docker save app | gzip > app.tar.gz
-          docker save app-migrate | gzip > app-migrate.tar.gz
+      - name: Save Docker image
+        run: docker save app | gzip > app.tar.gz
 
-      - name: Copy images to server
+      - name: Copy image to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "app.tar.gz,app-migrate.tar.gz"
+          source: "app.tar.gz"
           target: "/tmp"
 
       - name: Deploy on server
@@ -87,15 +83,14 @@ jobs:
             CLIENT_SECRET_GOOGLE=${{ secrets.CLIENT_SECRET_GOOGLE }}
             EOF
 
-            echo "Loading images..."
+            echo "Loading image..."
             docker load < /tmp/app.tar.gz
-            docker load < /tmp/app-migrate.tar.gz
 
             echo "Starting database..."
             docker compose -f ./docker/production/compose.yaml up -d db
 
             echo "Running migrations..."
-            docker run --rm --network my_network --env-file .env app-migrate
+            docker run --rm --network my_network --env-file .env -e NODE_PATH=/app/migrate_modules app node app/db/runMigrations.js
 
             echo "Starting application..."
             docker compose -f ./docker/production/compose.yaml up -d

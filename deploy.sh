@@ -13,18 +13,18 @@ REPO_URL="https://github.com/4-life/hello-world.git"
 sudo apt update && sudo apt upgrade -y
 
 # Add Swap Space
-echo "Adding swap space..."
-sudo fallocate -l $SWAP_SIZE /swapfile
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
-
-# Make swap permanent
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+if [ ! -f /swapfile ]; then
+  echo "Adding swap space..."
+  sudo fallocate -l $SWAP_SIZE /swapfile
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile
+  sudo swapon /swapfile
+  echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+fi
 
 # Create dedicated deploy user with SSH key for CI/CD
 SSH_USER="deploy"
-SSH_PORT=22
+SSH_PORT=56777
 
 if ! id "$SSH_USER" &>/dev/null; then
   sudo useradd -m -s /bin/bash "$SSH_USER"
@@ -49,6 +49,7 @@ sudo apt install ufw -y
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw allow $SSH_PORT/tcp
+sudo ufw allow ssh
 sudo ufw --force enable
 
 # Install Docker
