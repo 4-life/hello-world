@@ -1,9 +1,11 @@
 #!/bin/bash
 
+export DEBIAN_FRONTEND=noninteractive
+
 # Script Vars
 DOMAIN_NAME="hello-world.website"
 EMAIL="admin@hello-world.website"
-APP_DIR=~/app
+APP_DIR=/home/deploy/app
 SWAP_SIZE="1G"
 REPO_URL="https://github.com/4-life/hello-world.git"
 
@@ -20,10 +22,34 @@ sudo swapon /swapfile
 # Make swap permanent
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 
+# Create dedicated deploy user with SSH key for CI/CD
+SSH_USER="deploy"
+SSH_PORT=22
+
+if ! id "$SSH_USER" &>/dev/null; then
+  sudo useradd -m -s /bin/bash "$SSH_USER"
+  sudo usermod -aG docker "$SSH_USER"
+fi
+
+sudo mkdir -p /home/$SSH_USER/.ssh
+sudo chmod 700 /home/$SSH_USER/.ssh
+
+sudo ssh-keygen -t ed25519 -f /home/$SSH_USER/.ssh/id_ed25519 -N "" -C "deploy@$DOMAIN_NAME"
+sudo cat /home/$SSH_USER/.ssh/id_ed25519.pub | sudo tee /home/$SSH_USER/.ssh/authorized_keys
+sudo chmod 600 /home/$SSH_USER/.ssh/authorized_keys
+sudo chown -R $SSH_USER:$SSH_USER /home/$SSH_USER/.ssh
+
+# Allow deploy user to run docker without sudo (already via group)
+# and to write to app directory
+sudo mkdir -p $APP_DIR
+sudo chown $SSH_USER:$SSH_USER $APP_DIR
+
 # Open 80 port for HTTP and 443 port for HTTPS
 sudo apt install ufw -y
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
+sudo ufw allow $SSH_PORT/tcp
+sudo ufw --force enable
 
 # Install Docker
 sudo apt install apt-transport-https ca-certificates curl software-properties-common -y
@@ -58,14 +84,13 @@ fi
 sudo systemctl enable docker
 sudo systemctl start docker
 
-# Clone the Git repository
+# Clone the Git repository as deploy user
 if [ -d "$APP_DIR" ]; then
   echo "Directory $APP_DIR already exists. Pulling latest changes..."
-  cd $APP_DIR && git pull
+  sudo -u $SSH_USER git -C $APP_DIR pull
 else
   echo "Cloning repository from $REPO_URL..."
-  git clone $REPO_URL $APP_DIR
-  cd $APP_DIR
+  sudo -u $SSH_USER git clone $REPO_URL $APP_DIR
 fi
 
 # Install Nginx
@@ -140,9 +165,21 @@ sudo systemctl restart nginx
 ( crontab -l 2>/dev/null; echo "0 */12 * * * certbot renew --quiet && systemctl reload nginx" ) | crontab -
 
 # Output final message
-echo "Deployment complete https://$DOMAIN_NAME.
+SSH_HOST=$(curl -s ifconfig.me)
+PRIVATE_KEY=$(sudo cat /home/$SSH_USER/.ssh/id_ed25519)
 
-The .env file has been created in $APP_DIR/.env. Add secret environment variables as needed.
+echo "
+========================================
+  Deployment setup complete!
+  https://$DOMAIN_NAME
+========================================
 
-Then app must be deployed by a CI/CD pipeline
-"
+Add these to GitHub → Settings → Secrets and variables → Actions:
+
+  SSH_HOST     = $SSH_HOST
+  SSH_PORT     = $SSH_PORT
+  SSH_USER     = $SSH_USER
+  SSH_PRIVATE_KEY (secret) =
+$PRIVATE_KEY
+
+========================================"
