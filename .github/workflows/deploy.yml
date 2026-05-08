@@ -85,11 +85,13 @@ jobs:
             echo "Loading image..."
             docker load < /tmp/deploy/app.tar.gz
 
+            cd $APP_DIR
+
             echo "Starting database..."
-            docker compose -f /tmp/deploy/docker/production/compose.yaml --project-directory $APP_DIR up -d db
+            docker compose -f /tmp/deploy/docker/production/compose.yaml up -d db
 
             echo "Running migrations..."
             docker run --rm --network my_network --env-file $APP_DIR/.env app node app/db/runMigrations.js
 
             echo "Starting application..."
-            docker compose -f /tmp/deploy/docker/production/compose.yaml --project-directory $APP_DIR up -d
+            docker compose -f /tmp/deploy/docker/production/compose.yaml up -d
