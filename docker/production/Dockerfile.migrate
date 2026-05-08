@@ -1,0 +1,14 @@
+# syntax=docker.io/docker/dockerfile:1
+
+FROM node:20-alpine
+RUN apk add --no-cache libc6-compat python3 make g++
+
+WORKDIR /app
+
+COPY app/db/migrate-package.json ./package.json
+RUN npm install
+
+COPY app/db/runMigrations.js ./
+COPY app/db/migrations ./migrations
+
+CMD ["node", "runMigrations.js"]

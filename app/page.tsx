@@ -1,42 +1,24 @@
 import SignInButton from '@/components/SignInButton';
+import LoginForm from '@/components/LoginForm';
 import Image from 'next/image';
 
 export default async function Home(): Promise<React.JSX.Element> {
   return (
-    <section>
-      <div
-        style={{
-          display: 'flex',
-          gap: '10px',
-          justifyContent: 'space-between',
-        }}
-      >
-        <h1>Header</h1>
-        <SignInButton />
-      </div>
-
-      <h3>Image Optimization</h3>
+    <div className="flex flex-1 flex-col items-center justify-center gap-8">
       <Image
-        src="https://images.unsplash.com/photo-1755095901325-637deba5b2b5"
-        width={1700 / 8}
-        height={1100 / 8}
-        alt="Some image"
+        src="/logo.png"
+        alt="Company Vacations"
+        width={200}
+        height={80}
+        priority
       />
-
-      <h3>Suspense components streaming</h3>
-      <p>
-        <a href="/streaming">View the demo</a>
-      </p>
-
-      <h3>GraphQL example</h3>
-      <p>
-        <a href="/users">View the demo</a>
-      </p>
-
-      <h3>Caching / Incremental Static Regeneration</h3>
-      <p>
-        <a href="/isr">View the demo</a>
-      </p>
-    </section>
+      <LoginForm />
+      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <div className="h-px w-24 bg-border" />
+        or
+        <div className="h-px w-24 bg-border" />
+      </div>
+      <SignInButton />
+    </div>
   );
 }

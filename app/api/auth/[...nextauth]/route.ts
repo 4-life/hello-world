@@ -28,21 +28,23 @@ export const authOptions: AuthOptions = {
     CredentialsProvider({
       name: 'credentials',
       credentials: {
-        email: {},
+        login: {},
         password: {},
       },
       async authorize(credentials) {
         const repo = db.getRepository(User);
 
         const user = await repo.findOne({
-          where: { email: credentials!.email },
+          where: { login: credentials!.login },
         });
 
         if (!user || !user.password) return null;
 
         const isOk = await bcrypt.compare(credentials!.password, user.password);
 
-        return isOk ? { id: user.id, email: user.email } : null;
+        return isOk
+          ? { id: user.id, email: user.email, name: user.login }
+          : null;
       },
     }),
   ],
@@ -70,22 +72,24 @@ export const authOptions: AuthOptions = {
     },
 
     async jwt({ token, user }) {
-      if (user?.email) {
-        const dbUser = await db.getRepository(User).findOne({
-          where: { email: user.email },
-        });
+      if (user) {
+        const repo = db.getRepository(User);
+        const dbUser = user.email
+          ? await repo.findOne({ where: { email: user.email } })
+          : await repo.findOne({ where: { id: user.id } });
 
         token.userId = dbUser?.id;
+        token.role = dbUser?.role;
       }
 
       return token;
     },
 
     async session({ session, token }) {
-      // ensure session.user exists before assigning id
       (session as { user: Record<string, unknown> }).user = {
         ...(session?.user ?? {}),
         userId: token.userId!,
+        role: token.role,
       };
       return session;
     },

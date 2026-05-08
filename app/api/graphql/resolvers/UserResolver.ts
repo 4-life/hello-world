@@ -2,7 +2,6 @@ import { Resolver, Query, Mutation, Arg, Ctx, Authorized } from 'type-graphql';
 import * as bcrypt from 'bcrypt';
 import { db } from '@/app/db/db';
 import {
-  Post,
   User,
   UpdateUserInput,
   UsersFilter,
@@ -11,32 +10,33 @@ import {
 } from '@/app/db/entities';
 import type { Context } from '@/server/context';
 import type { FindOptionsWhere } from 'typeorm';
+import { ILike } from 'typeorm';
 
 @Resolver(User)
 export class UserResolver {
   private repo = db.getRepository(User);
 
-  @Authorized()
+  @Authorized('manager', 'admin')
   @Query(() => PaginatedUsersResponse)
   async users(
     @Arg('filter', () => UsersFilter, { nullable: true }) filter?: UsersFilter,
     @Arg('pagination', () => PaginationInput, { nullable: true })
     pagination?: PaginationInput,
   ): Promise<PaginatedUsersResponse> {
-    const skip = (pagination?.limit ?? 10) * ((pagination?.offset ?? 0) - 1);
+    const skip = pagination?.offset ?? 0;
     const where: FindOptionsWhere<User> = {};
 
     if (filter?.id) where.id = filter.id;
     if (filter?.login) where.login = filter.login;
+    if (filter?.email) where.email = ILike(`%${filter.email}%`);
     if (filter?.role) where.role = filter.role;
-    if (filter?.pinnedPostId) where.pinnedPost = { id: filter.pinnedPostId };
 
     const [items, total] = await this.repo.findAndCount({
       where,
-      relations: ['pinnedPost', 'posts'],
       skip,
       take: pagination?.limit ?? 10,
       order: { createdDate: 'ASC' },
+      relations: ['vacations'],
     });
 
     return { items, total };
@@ -44,7 +44,7 @@ export class UserResolver {
 
   @Query(() => User, { nullable: true })
   async user(@Arg('id') id: string): Promise<User | null> {
-    return this.repo.findOne({ where: { id }, relations: ['posts'] });
+    return this.repo.findOne({ where: { id }, relations: ['vacations'] });
   }
 
   @Mutation(() => User)
@@ -75,29 +75,6 @@ export class UserResolver {
     });
 
     return repo.save(user);
-  }
-
-  @Authorized()
-  @Mutation(() => User)
-  async setPinnedPost(
-    @Arg('userId') userId: string,
-    @Arg('postId') postId: string,
-  ): Promise<User> {
-    const user = await this.repo.findOne({ where: { id: userId } });
-    if (!user) throw new Error('User not found');
-
-    const post = await db.getRepository(Post).findOne({
-      where: { id: postId },
-      relations: ['author'],
-    });
-    if (!post) throw new Error('Post not found');
-
-    if (post.author.id !== user.id) {
-      throw new Error('Post does not belong to this user');
-    }
-
-    user.pinnedPost = post;
-    return this.repo.save(user);
   }
 
   @Authorized()

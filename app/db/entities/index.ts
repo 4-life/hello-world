@@ -1,11 +1,11 @@
-import { Post } from './Post';
 import { User } from './User';
+import { Vacation } from './Vacation';
 import './PaginationInput';
 
-export * from './Post';
 export * from './User';
+export * from './Vacation';
 export * from './PaginationInput';
 
-const entities = [User, Post];
+const entities = [User, Vacation];
 
 export default entities;
