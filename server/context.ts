@@ -3,6 +3,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export type Context = {
   userId: string | null;
+  role: string | null;
 };
 
 export async function createContext(req: Request): Promise<Context> {
@@ -12,13 +13,15 @@ export async function createContext(req: Request): Promise<Context> {
       headers: req.headers,
     });
 
+    const user = session?.user as
+      | { userId?: string; role?: string }
+      | undefined;
+
     return {
-      userId:
-        session?.user && 'userId' in session.user
-          ? (session.user as { userId: string }).userId
-          : null,
+      userId: user?.userId ?? null,
+      role: user?.role ?? null,
     };
   } catch {
-    return { userId: null };
+    return { userId: null, role: null };
   }
 }

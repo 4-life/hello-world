@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { buildQuery } from '@/utils';
 import { useSearchParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   limit: number;
@@ -16,23 +17,43 @@ export default function Pagination({
   limit,
 }: Props): React.JSX.Element {
   const searchParams = useSearchParams();
-  return (
-    <div>
-      {page > 1 && (
-        <Link href={buildQuery(searchParams, { page: String(page - 1) })}>
-          ← Prev{' '}
-        </Link>
-      )}
+  const totalPages = Math.ceil(total / limit);
 
-      <span>
-        Page {page} of {Math.ceil(total / limit)}{' '}
+  return (
+    <div className="flex items-center gap-3 text-sm">
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={page <= 1}
+        asChild={page > 1}
+      >
+        {page > 1 ? (
+          <Link href={buildQuery(searchParams, { page: String(page - 1) })}>
+            ← Prev
+          </Link>
+        ) : (
+          <span>← Prev</span>
+        )}
+      </Button>
+
+      <span className="text-muted-foreground">
+        Page {page} of {totalPages}
       </span>
 
-      {page < total && (
-        <Link href={buildQuery(searchParams, { page: String(page + 1) })}>
-          Next →
-        </Link>
-      )}
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={page >= totalPages}
+        asChild={page < totalPages}
+      >
+        {page < totalPages ? (
+          <Link href={buildQuery(searchParams, { page: String(page + 1) })}>
+            Next →
+          </Link>
+        ) : (
+          <span>Next →</span>
+        )}
+      </Button>
     </div>
   );
 }

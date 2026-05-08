@@ -5,8 +5,6 @@ import {
   BeforeInsert,
   BeforeUpdate,
   Index,
-  OneToOne,
-  JoinColumn,
   OneToMany,
 } from 'typeorm';
 import type { Relation } from 'typeorm';
@@ -18,7 +16,7 @@ import {
   registerEnumType,
   Int,
 } from 'type-graphql';
-import { Post } from '.';
+import { Vacation } from './Vacation';
 import { UserRole } from './UserRole';
 
 registerEnumType(UserRole, {
@@ -35,39 +33,31 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // -----------------------------
-  // AUTH
-  // -----------------------------
   @Field()
   @Index({ unique: true })
   @Column({ type: 'varchar', length: 100 })
   login: string;
 
-  // OAuth users don’t have passwords
   @Column({ type: 'varchar', length: 255, nullable: true })
-  password?: string; // hashed password
+  password?: string;
 
-  // -----------------------------
-  // PROFILE FIELDS (Optional)
-  // -----------------------------
-  @Field()
+  @Field({ nullable: true })
   @Column({ type: 'varchar', length: 100, nullable: true })
   firstName?: string;
 
-  @Field()
+  @Field({ nullable: true })
   @Column({ type: 'varchar', length: 100, nullable: true })
   lastName?: string;
 
-  @Field()
+  @Field({ nullable: true })
   @Column({ type: 'varchar', length: 200, nullable: true })
   email?: string;
 
-  @Field()
+  @Field({ nullable: true })
   @Column({ type: 'varchar', length: 20, nullable: true })
   phone?: string;
 
-  // avatar URL
-  @Field()
+  @Field({ nullable: true })
   @Column({ type: 'varchar', length: 500, nullable: true })
   avatar?: string;
 
@@ -79,15 +69,20 @@ export class User {
   })
   role: UserRole;
 
-  @Field(() => Post, { nullable: true })
-  @OneToOne(() => Post, { nullable: true })
-  @JoinColumn() // owning side
-  pinnedPost?: Relation<Post>;
+  @Field(() => [Vacation])
+  @OneToMany(() => Vacation, (vacation) => vacation.user)
+  vacations: Relation<Vacation>[];
 
-  @Field(() => [Post])
-  @OneToMany(() => Post, (post) => post.author)
-  @JoinColumn()
-  posts: Relation<Post>[];
+  @Field({ nullable: true })
+  @Column({
+    type: 'date',
+    nullable: true,
+    transformer: {
+      to: (v: Date) => v,
+      from: (v: string) => (v ? new Date(v) : null),
+    },
+  })
+  startWorkDate?: Date;
 
   @Field()
   @Column({ type: 'timestamp' })
@@ -143,11 +138,11 @@ export class UsersFilter {
   @Field(() => String, { nullable: true })
   login?: string;
 
-  @Field(() => String, { nullable: true })
-  pinnedPostId?: string;
-
   @Field(() => UserRole, { nullable: true })
   role?: UserRole;
+
+  @Field(() => String, { nullable: true })
+  email?: string;
 }
 
 @ObjectType('PaginatedUsersResponse')

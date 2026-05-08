@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+.github
+*.env*
+docker
+README.md
+tsconfig.tsbuildinfo

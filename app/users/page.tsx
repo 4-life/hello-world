@@ -1,14 +1,16 @@
-import Pagination from '@/components/Pagination';
-import Filters from '@/components/Filters';
 import getUsers from '@/app/libs/getUsers';
 import { UserRole } from '@/app/db/entities/UserRole';
-import UserItem from '@/components/UserItem';
+import { columns } from './columns';
+import { DataTable } from './data-table';
+import Pagination from '@/components/Pagination';
+import Filters from '@/components/Filters';
 
 type Props = {
   searchParams: {
     page?: string;
     limit?: string;
     role?: UserRole;
+    email?: string;
   };
 };
 
@@ -17,24 +19,33 @@ export default async function UsersPage({
 }: Props): Promise<React.JSX.Element> {
   const params = await searchParams;
   const role = params.role;
-  const offset = Number(params.page ?? 1);
-  const limit = Number(params.limit ?? 5);
+  const email = params.email;
+  const page = Number(params.page ?? 1);
+  const limit = Number(params.limit ?? 10);
+  const offset = (page - 1) * limit;
 
-  const { data, error } = await getUsers({ role }, { limit, offset });
+  const { data, error } = await getUsers({ role, email }, { limit, offset });
 
   if (error) {
-    return <p>{error.message}</p>;
+    return <p className="p-6 text-destructive">{error.message}</p>;
   }
 
+  const users = data?.users.items ?? [];
+
   return (
-    <div>
+    <div className="p-6 space-y-4">
+      <h1 className="text-2xl font-semibold">
+        Users{' '}
+        <span className="text-sm font-normal text-muted-foreground">
+          ({data?.users.total ?? 0})
+        </span>
+      </h1>
+
       <Filters />
 
-      {data?.users.items.map((user) => (
-        <UserItem key={user.id} user={user} />
-      ))}
+      <DataTable columns={columns} data={users} />
 
-      <Pagination limit={limit} page={offset} total={data?.users.total ?? 0} />
+      <Pagination limit={limit} page={page} total={data?.users.total ?? 0} />
     </div>
   );
 }

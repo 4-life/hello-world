@@ -1,6 +1,6 @@
 import { getClient } from '@/server/getServerApolloClient';
 import { gql } from '@apollo/client';
-import { PaginationInput, Post, User, UsersFilter } from '../db/entities';
+import { PaginationInput, User, UsersFilter } from '../db/entities';
 import { cache } from 'react';
 
 export interface UsersQuery {
@@ -8,11 +8,12 @@ export interface UsersQuery {
     items: {
       id: User['id'];
       login: User['login'];
-      pinnedPost?: {
-        id: Post['id'];
-        title: Post['title'];
-        content?: Post['content'];
-      } | null;
+      firstName?: User['firstName'] | null;
+      lastName?: User['lastName'] | null;
+      email?: User['email'] | null;
+      role: User['role'];
+      startWorkDate?: User['startWorkDate'] | null;
+      vacations: { startDate: Date; endDate: Date }[];
     }[];
     total: number;
   };
@@ -24,10 +25,14 @@ const GET_USERS = gql`
       items {
         id
         login
-        pinnedPost {
-          id
-          title
-          content
+        firstName
+        lastName
+        email
+        role
+        startWorkDate
+        vacations {
+          startDate
+          endDate
         }
       }
       total

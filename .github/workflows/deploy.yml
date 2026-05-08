@@ -38,26 +38,24 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Build Docker image
+      - name: Build Docker images
         run: |
-          docker build \
-            --build-arg POSTGRES_USER="${{ vars.POSTGRES_USER }}" \
-            --build-arg POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}" \
-            --build-arg POSTGRES_DB="${{ vars.POSTGRES_DB }}" \
-            -f docker/production/Dockerfile \
-            -t app .
+          docker build -f docker/production/Dockerfile -t app .
+          docker build -f docker/production/Dockerfile.migrate -t app-migrate .
 
-      - name: Save Docker image
-        run: docker save app | gzip > app.tar.gz
+      - name: Save Docker images
+        run: |
+          docker save app | gzip > app.tar.gz
+          docker save app-migrate | gzip > app-migrate.tar.gz
 
-      - name: Copy image to server
+      - name: Copy images to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "app.tar.gz"
+          source: "app.tar.gz,app-migrate.tar.gz"
           target: "/tmp"
 
       - name: Deploy on server
@@ -71,13 +69,14 @@ jobs:
             set -e
 
             cd ~/app
+            git pull
 
             echo "Creating .env file..."
 
             cat > .env <<EOF
             NODE_ENV=production
-            NEXT_PUBLIC_API_URL=https://hello-world.website
-            NEXTAUTH_URL=https://hello-world.website
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }}
             POSTGRES_USER=${{ vars.POSTGRES_USER }}
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             POSTGRES_DB=${{ vars.POSTGRES_DB }}
@@ -88,14 +87,15 @@ jobs:
             CLIENT_SECRET_GOOGLE=${{ secrets.CLIENT_SECRET_GOOGLE }}
             EOF
 
-            echo "Loading image..."
+            echo "Loading images..."
             docker load < /tmp/app.tar.gz
+            docker load < /tmp/app-migrate.tar.gz
 
             echo "Starting database..."
             docker compose -f ./docker/production/compose.yaml up -d db
 
             echo "Running migrations..."
-            docker run --rm --network my_network --env-file .env app:latest node app/db/runMigrations.js
+            docker run --rm --network my_network --env-file .env app-migrate
 
             echo "Starting application..."
             docker compose -f ./docker/production/compose.yaml up -d
