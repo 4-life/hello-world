@@ -44,6 +44,22 @@ jobs:
       - name: Save Docker image
         run: docker save app | gzip > app.tar.gz
 
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          NODE_ENV=production
+          NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+          NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }}
+          POSTGRES_USER=${{ vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ vars.POSTGRES_DB }}
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+          CLIENT_ID_GITHUB=${{ secrets.CLIENT_ID_GITHUB }}
+          CLIENT_SECRET_GITHUB=${{ secrets.CLIENT_SECRET_GITHUB }}
+          CLIENT_ID_GOOGLE=${{ secrets.CLIENT_ID_GOOGLE }}
+          CLIENT_SECRET_GOOGLE=${{ secrets.CLIENT_SECRET_GOOGLE }}
+          EOF
+
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -51,7 +67,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "app.tar.gz,docker/production/compose.yaml"
+          source: "app.tar.gz,.env,docker/production/compose.yaml"
           target: "/tmp/deploy"
 
       - name: Deploy on server
@@ -67,29 +83,14 @@ jobs:
             APP_DIR=$HOME/app
             mkdir -p $APP_DIR
 
-            echo "Creating .env file..."
-            cat > $APP_DIR/.env <<EOF
-            NODE_ENV=production
-            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
-            NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }}
-            POSTGRES_USER=${{ vars.POSTGRES_USER }}
-            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            POSTGRES_DB=${{ vars.POSTGRES_DB }}
-            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-            CLIENT_ID_GITHUB=${{ secrets.CLIENT_ID_GITHUB }}
-            CLIENT_SECRET_GITHUB=${{ secrets.CLIENT_SECRET_GITHUB }}
-            CLIENT_ID_GOOGLE=${{ secrets.CLIENT_ID_GOOGLE }}
-            CLIENT_SECRET_GOOGLE=${{ secrets.CLIENT_SECRET_GOOGLE }}
-            EOF
-
             echo "Loading image..."
             docker load < /tmp/deploy/app.tar.gz
 
             echo "Starting database..."
-            docker compose -f /tmp/deploy/docker/production/compose.yaml --env-file $APP_DIR/.env up -d db
+            docker compose -f /tmp/deploy/docker/production/compose.yaml --env-file /tmp/deploy/.env up -d db
 
             echo "Running migrations..."
-            docker run --rm --network my_network --env-file $APP_DIR/.env app node app/db/runMigrations.js
+            docker run --rm --network my_network --env-file /tmp/deploy/.env app node app/db/runMigrations.js
 
             echo "Starting application..."
-            docker compose -f /tmp/deploy/docker/production/compose.yaml --env-file $APP_DIR/.env up -d
+            docker compose -f /tmp/deploy/docker/production/compose.yaml --env-file /tmp/deploy/.env up -d
