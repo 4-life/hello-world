@@ -44,15 +44,15 @@ jobs:
       - name: Save Docker image
         run: docker save app | gzip > app.tar.gz
 
-      - name: Copy image to server
+      - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "app.tar.gz"
-          target: "/tmp"
+          source: "app.tar.gz,docker/production/compose.yaml"
+          target: "/tmp/deploy"
 
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.3
@@ -64,12 +64,10 @@ jobs:
           script: |
             set -e
 
-            cd ~/app
-            git pull
+            mkdir -p ~/app
 
             echo "Creating .env file..."
-
-            cat > .env <<EOF
+            cat > ~/app/.env <<EOF
             NODE_ENV=production
             NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
             NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }}
@@ -84,13 +82,13 @@ jobs:
             EOF
 
             echo "Loading image..."
-            docker load < /tmp/app.tar.gz
+            docker load < /tmp/deploy/app.tar.gz
 
             echo "Starting database..."
-            docker compose -f ./docker/production/compose.yaml up -d db
+            docker compose -f /tmp/deploy/docker/production/compose.yaml --project-directory ~/app up -d db
 
             echo "Running migrations..."
-            docker run --rm --network my_network --env-file .env app node app/db/runMigrations.js
+            docker run --rm --network my_network --env-file ~/app/.env app node app/db/runMigrations.js
 
             echo "Starting application..."
-            docker compose -f ./docker/production/compose.yaml up -d
+            docker compose -f /tmp/deploy/docker/production/compose.yaml --project-directory ~/app up -d
