@@ -48,13 +48,26 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push app image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/production/Dockerfile
           push: true
+          target: runner
           tags: ghcr.io/${{ github.repository }}:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }}
+
+      - name: Build and push migrator image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/production/Dockerfile
+          push: true
+          target: migrator
+          tags: ghcr.io/${{ github.repository }}:migrate
           build-args: |
             NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
             NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }}
@@ -97,15 +110,16 @@ jobs:
 
             echo "${{ secrets.GHCR_TOKEN }}" | sudo docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-            echo "Pulling image..."
+            echo "Pulling images..."
             sudo docker pull ghcr.io/${{ github.repository }}:latest
+            sudo docker pull ghcr.io/${{ github.repository }}:migrate
             sudo docker tag ghcr.io/${{ github.repository }}:latest app
 
             echo "Starting database..."
             sudo docker compose -f /tmp/deploy/docker/production/compose.yaml up -d db --wait
 
             echo "Running migrations..."
-            sudo docker run --rm --network my_network --env-file /tmp/deploy/.env app node app/db/runMigrations.js
+            sudo docker run --rm --network my_network --env-file /tmp/deploy/.env ghcr.io/${{ github.repository }}:migrate
 
             echo "Starting application..."
             sudo docker compose -f /tmp/deploy/docker/production/compose.yaml up -d
