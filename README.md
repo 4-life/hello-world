@@ -144,8 +144,8 @@ The CI/CD pipeline (GitHub Actions) does:
    - `npm run lint`
 2. **`deploy` job** (only on `main`, only if `checks` passes):
    - Builds a Docker image (multi-stage: deps → migrate-deps → builder → runner)
-   - Copies the image to the server via SCP
-   - SSH: loads image, starts DB, runs migrations, starts app
+   - Pushes the image to `ghcr.io` (GitHub Container Registry)
+   - SSH: pulls image, starts DB, runs migrations, starts app
 
 ### Manual first server setup
 
@@ -161,10 +161,21 @@ chmod +x ~/deploy.sh && SSH_USER=myuser SSH_PORT=22 ./deploy.sh
 |---|---|
 | `SSH_HOST`, `SSH_USER`, `SSH_PORT` | Variables / Secrets |
 | `SSH_PRIVATE_KEY` | Secret |
+| `GHCR_TOKEN` | Secret |
 | `POSTGRES_USER`, `POSTGRES_DB` | Variables |
 | `POSTGRES_PASSWORD`, `NEXTAUTH_SECRET` | Secrets |
 | `CLIENT_ID_GITHUB`, `CLIENT_SECRET_GITHUB` | Secrets |
 | `CLIENT_ID_GOOGLE`, `CLIENT_SECRET_GOOGLE` | Secrets |
+
+#### Creating `GHCR_TOKEN`
+
+The server needs this token to pull the Docker image from `ghcr.io`.
+
+1. Go to **GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)**
+2. Generate a new token with the `read:packages` scope
+3. Add it to the repository: **Settings → Secrets and variables → Actions → New repository secret**
+   - Name: `GHCR_TOKEN`
+   - Value: the token you just created
 
 ## Security
 
