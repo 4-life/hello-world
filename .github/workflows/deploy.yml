@@ -89,15 +89,14 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          envs: GHCR_TOKEN,IMAGE
           script: |
             set -e
 
-            echo "$GHCR_TOKEN" | sudo docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+            echo "${{ secrets.GHCR_TOKEN }}" | sudo docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
             echo "Pulling image..."
-            sudo docker pull $IMAGE
-            sudo docker tag $IMAGE app
+            sudo docker pull ghcr.io/${{ github.repository }}:latest
+            sudo docker tag ghcr.io/${{ github.repository }}:latest app
 
             echo "Starting database..."
             sudo docker compose -f /tmp/deploy/docker/production/compose.yaml up -d db
@@ -107,6 +106,3 @@ jobs:
 
             echo "Starting application..."
             sudo docker compose -f /tmp/deploy/docker/production/compose.yaml up -d
-        env:
-          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
-          IMAGE: ghcr.io/${{ github.repository }}:latest
