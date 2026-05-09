@@ -15,22 +15,15 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
-# Production-only deps — copied into the runner for the migration script
-FROM base AS prod-deps
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
-RUN \
-  if [ -f yarn.lock ]; then yarn --frozen-lockfile --production; \
-  elif [ -f package-lock.json ]; then npm ci --omit=dev; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --prod; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
 
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ARG NEXT_PUBLIC_API_URL
+ARG NEXTAUTH_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXTAUTH_URL=$NEXTAUTH_URL
 RUN npm run build
 
 FROM base AS runner
@@ -46,7 +39,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/app/db/runMigrations.js ./app/db/runMigrations.js
 COPY --from=builder --chown=nextjs:nodejs /app/app/db/migrations ./app/db/migrations
-COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 USER nextjs
 
