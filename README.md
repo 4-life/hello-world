@@ -152,7 +152,7 @@ The CI/CD pipeline (GitHub Actions) does:
 ```bash
 ssh root@your_server_ip
 curl -o ~/deploy.sh https://raw.githubusercontent.com/4-life/hello-world/main/deploy.sh
-chmod +x ~/deploy.sh && ./deploy.sh
+chmod +x ~/deploy.sh && SSH_USER=myuser SSH_PORT=22 ./deploy.sh
 ```
 
 ### Required secrets / vars

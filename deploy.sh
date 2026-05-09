@@ -1,13 +1,13 @@
 #!/bin/bash
 
-export DEBIAN_FRONTEND=noninteractive
-
 # Script Vars
 DOMAIN_NAME="hello-world.website"
 EMAIL="admin@hello-world.website"
 APP_DIR=/home/deploy/app
 SWAP_SIZE="1G"
 REPO_URL="https://github.com/4-life/hello-world.git"
+SSH_USER=${SSH_USER:-myuser}
+SSH_PORT=${SSH_PORT:-22}
 
 # Update package list and upgrade existing packages
 sudo apt update && sudo apt upgrade -y
@@ -23,14 +23,12 @@ if [ ! -f /swapfile ]; then
 fi
 
 # Create dedicated deploy user with SSH key for CI/CD
-SSH_USER="deploy"
-SSH_PORT=56777
-
 if ! id "$SSH_USER" &>/dev/null; then
   sudo useradd -m -s /bin/bash "$SSH_USER"
 fi
 
 sudo usermod -aG docker "$SSH_USER"
+echo "$SSH_USER ALL=(ALL) NOPASSWD: /usr/bin/docker" | sudo tee /etc/sudoers.d/${SSH_USER}-docker > /dev/null
 
 sudo mkdir -p /home/$SSH_USER/.ssh
 sudo chmod 700 /home/$SSH_USER/.ssh

@@ -33,16 +33,28 @@ jobs:
     needs: checks
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Build Docker image
-        run: docker build -f docker/production/Dockerfile -t app .
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Save Docker image
-        run: docker save app | gzip > app.tar.gz
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/production/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}:latest
 
       - name: Create .env file
         run: |
@@ -60,14 +72,14 @@ jobs:
           CLIENT_SECRET_GOOGLE=${{ secrets.CLIENT_SECRET_GOOGLE }}
           EOF
 
-      - name: Copy files to server
+      - name: Copy compose and env to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "app.tar.gz,.env,docker/production/compose.yaml"
+          source: ".env,docker/production/compose.yaml"
           target: "/tmp/deploy"
 
       - name: Deploy on server
@@ -77,20 +89,24 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
+          envs: GHCR_TOKEN,IMAGE
           script: |
             set -e
 
-            APP_DIR=$HOME/app
-            mkdir -p $APP_DIR
+            echo "$GHCR_TOKEN" | sudo docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-            echo "Loading image..."
-            docker load < /tmp/deploy/app.tar.gz
+            echo "Pulling image..."
+            sudo docker pull $IMAGE
+            sudo docker tag $IMAGE app
 
             echo "Starting database..."
-            docker compose -f /tmp/deploy/docker/production/compose.yaml --env-file /tmp/deploy/.env up -d db
+            sudo docker compose -f /tmp/deploy/docker/production/compose.yaml up -d db
 
             echo "Running migrations..."
-            docker run --rm --network my_network --env-file /tmp/deploy/.env app node app/db/runMigrations.js
+            sudo docker run --rm --network my_network --env-file /tmp/deploy/.env app node app/db/runMigrations.js
 
             echo "Starting application..."
-            docker compose -f /tmp/deploy/docker/production/compose.yaml --env-file /tmp/deploy/.env up -d
+            sudo docker compose -f /tmp/deploy/docker/production/compose.yaml up -d
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          IMAGE: ghcr.io/${{ github.repository }}:latest
