@@ -1,16 +1,23 @@
 class SeedVacations1710000000003 {
   async up(queryRunner) {
     await queryRunner.query(`
+      WITH seeded AS (
+        SELECT
+          u.id,
+          u.login,
+          (now() + ((random() * 60 + (t.n - 1) * 90))::int * interval '1 day')::date AS start_date
+        FROM users u
+        CROSS JOIN (VALUES (1), (2)) AS t(n)
+        WHERE u.login LIKE 'user%'
+      )
       INSERT INTO vacations (id, "userId", "startDate", "endDate", info)
       SELECT
         uuid_generate_v4(),
-        u.id,
-        (now() + (random() * interval '30 days'))::date,
-        (now() + (random() * interval '30 days') + interval '7 days')::date,
-        'Vacation for ' || u.login
-      FROM users u
-      WHERE u.login LIKE 'user%'
-      LIMIT 20
+        id,
+        start_date,
+        (start_date + (1 + floor(random() * 14))::int * interval '1 day')::date,
+        'Vacation for ' || login
+      FROM seeded
     `);
   }
 

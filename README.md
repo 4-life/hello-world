@@ -143,9 +143,16 @@ The CI/CD pipeline (GitHub Actions) does:
    - `npm run type-check`
    - `npm run lint`
 2. **`deploy` job** (only on `main`, only if `checks` passes):
-   - Builds a Docker image (multi-stage: deps → migrate-deps → builder → runner)
-   - Pushes the image to `ghcr.io` (GitHub Container Registry)
-   - SSH: pulls image, starts DB, runs migrations, starts app
+   - Builds and pushes two Docker images to `ghcr.io`:
+     - `:latest` — the app (`runner` stage)
+     - `:migrate` — the migration runner (`migrator` stage)
+   - Writes a `.env` file from GitHub Secrets/Variables and copies it with `docker/production/compose.yaml` to `/tmp/deploy` on the server
+   - SSH:
+     - Pulls both images from `ghcr.io` using `GHCR_TOKEN`
+     - Starts the database and waits for it to be healthy
+     - Runs migrations in an ephemeral `--rm` container
+     - Starts the application
+     - Prunes old images and removes `/tmp/deploy`
 
 ### Manual first server setup
 
@@ -154,6 +161,8 @@ ssh root@your_server_ip
 curl -o ~/deploy.sh https://raw.githubusercontent.com/4-life/hello-world/main/deploy.sh
 chmod +x ~/deploy.sh && SSH_USER=myuser SSH_PORT=22 ./deploy.sh
 ```
+
+`SSH_USER` is the name of the deploy system user the script creates (default: `myuser`). `SSH_PORT` is the SSH port (default: `22`). Set them to match your `SSH_USER` and `SSH_PORT` secrets in GitHub Actions.
 
 ### Required secrets / vars
 
@@ -197,6 +206,13 @@ The server needs this token to pull the Docker image from `ghcr.io`.
 - **UFW** is enabled with only ports 22, 80, and 443 open.
 - **Nginx** sits in front of Next.js and handles SSL termination, HTTP→HTTPS redirect, and rate limiting (10 req/s, burst 20).
 - SSL certificates are issued by **Let's Encrypt** and auto-renewed every 12 hours via cron.
+
+### Access control
+
+Protected pages and API endpoints use two complementary layers:
+
+- **Page-level** — server-side layouts call `getServerSession` (NextAuth). The `/users` route group's [`layout.tsx`](app/users/layout.tsx) redirects unauthenticated requests to `/` before any page content renders.
+- **GraphQL-level** — resolvers that require authentication are decorated with `@Authorized()` (TypeGraphQL). The `authChecker` in [`app/api/graphql/schema.ts`](app/api/graphql/schema.ts) reads `context.userId`, which is populated from the NextAuth session by [`server/context.ts`](server/context.ts). A `null` userId rejects the request. Role-based access (`@Authorized('admin')`) is also supported.
 
 ### What to audit when adding a feature
 
