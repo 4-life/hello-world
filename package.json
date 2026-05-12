@@ -8,7 +8,9 @@
     "migration:run": "node app/db/runMigrations.js",
     "start": "docker compose -f docker/development/compose.yaml up",
     "type-check": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@apollo/client": "^4.0.9",
@@ -25,8 +27,8 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^1.8.0",
-    "next": "^16.0.3",
-    "next-auth": "^4.24.13",
+    "next": "^16.2.6",
+    "next-auth": "^4.24.14",
     "pg": "^8.16.3",
     "postcss": "^8.5.10",
     "postgres": "^3.4.5",
@@ -55,6 +57,7 @@
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-require-explicit-generics": "^1.0.0",
     "prettier": "^3.8.1",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^0.34.6"
   }
 }

@@ -5,6 +5,7 @@ services:
       - 8.8.4.4
     build:
       context: ../../
+      dockerfile: docker/development/Dockerfile
     image: my-app-development
     depends_on:
       - db
@@ -15,7 +16,7 @@ services:
       - ../..:/app # mount local source code into container
     networks:
       - my_network
-    command: sh -c "npm run migration:run && npm run dev"
+    command: sh -c "npm install @next/swc-linux-x64-musl --no-save 2>/dev/null; npm run migration:run && npm run dev"
 
   db:
     image: postgres:latest

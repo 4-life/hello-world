@@ -1,4 +1,4 @@
-class SeedVacations1710000000010 {
+class SeedVacations1710000000003 {
   async up(queryRunner) {
     await queryRunner.query(`
       INSERT INTO vacations (id, "userId", "startDate", "endDate", info)
@@ -10,16 +10,13 @@ class SeedVacations1710000000010 {
         'Vacation for ' || u.login
       FROM users u
       WHERE u.login LIKE 'user%'
-      LIMIT 20;
+      LIMIT 20
     `);
   }
 
   async down(queryRunner) {
-    await queryRunner.query(`
-      DELETE FROM vacations
-      WHERE info LIKE 'Vacation for user%';
-    `);
+    await queryRunner.query(`DELETE FROM vacations WHERE info LIKE 'Vacation for user%'`);
   }
 }
 
-module.exports = { SeedVacations1710000000010 };
+module.exports = { SeedVacations1710000000003 };

@@ -1,4 +1,4 @@
-class CreateVacationsTable1710000000009 {
+class CreateVacationsTable1710000000001 {
   async up(queryRunner) {
     await queryRunner.query(`
       CREATE TABLE vacations (
@@ -7,7 +7,7 @@ class CreateVacationsTable1710000000009 {
         "startDate" DATE NOT NULL,
         "endDate" DATE NOT NULL,
         info TEXT
-      );
+      )
     `);
   }
 
@@ -16,4 +16,4 @@ class CreateVacationsTable1710000000009 {
   }
 }
 
-module.exports = { CreateVacationsTable1710000000009 };
+module.exports = { CreateVacationsTable1710000000001 };
