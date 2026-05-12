@@ -25,6 +25,5 @@ export function calcAvailableDays(
     (today.getFullYear() - start.getFullYear()) * 12 +
       (today.getMonth() - start.getMonth()),
   );
-  console.log(workedMonths, countUsedDays(vacations));
   return Math.ceil(workedMonths * 2.33) - countUsedDays(vacations);
 }
