@@ -4,11 +4,7 @@ export function buildQuery(
   searchParams: ReadonlyURLSearchParams,
   newParams: Record<string, string>,
 ): string {
-  const params = new URLSearchParams();
-
-  Object.entries(searchParams).forEach(([key, value]) => {
-    if (value) params.set(key, value);
-  });
+  const params = new URLSearchParams(searchParams.toString());
 
   Object.entries(newParams).forEach(([key, value]) => {
     params.set(key, value);

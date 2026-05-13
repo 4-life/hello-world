@@ -47,14 +47,22 @@ export class UserResolver {
     return this.repo.findOne({ where: { id }, relations: ['vacations'] });
   }
 
+  @Authorized()
   @Mutation(() => User)
   async updateProfile(
     @Ctx() ctx: Context,
     @Arg('data') data: UpdateUserInput,
   ): Promise<User> {
-    const user = await this.repo.findOneByOrFail({ id: ctx.userId! });
+    const targetId = data.id ?? ctx.userId!;
+    const isOtherUser = targetId !== ctx.userId;
 
-    Object.assign(user, data);
+    if (isOtherUser && ctx.role !== 'admin' && ctx.role !== 'manager') {
+      throw new Error('Not authorized to update other users');
+    }
+
+    const user = await this.repo.findOneByOrFail({ id: targetId });
+    const { id: _, ...fields } = data;
+    Object.assign(user, fields);
     return this.repo.save(user);
   }
 

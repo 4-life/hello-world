@@ -105,13 +105,16 @@ export class User {
 
 @InputType('UpdateUserInput')
 export class UpdateUserInput {
-  @Field()
-  login: string;
+  @Field(() => String, { nullable: true })
+  id?: string;
 
-  @Field()
+  @Field(() => String, { nullable: true })
+  login?: string;
+
+  @Field(() => String, { nullable: true })
   password?: string;
 
-  @Field(() => UserRole)
+  @Field(() => UserRole, { nullable: true })
   role?: UserRole;
 
   @Field(() => String, { nullable: true })
@@ -128,6 +131,9 @@ export class UpdateUserInput {
 
   @Field(() => String, { nullable: true })
   avatar?: string;
+
+  @Field(() => Date, { nullable: true })
+  startWorkDate?: Date;
 }
 
 @InputType('UsersFilter')

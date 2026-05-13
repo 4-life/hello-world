@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import SignInButton from '@/components/SignInButton';
+import NotificationBell from '@/components/NotificationBell';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
@@ -40,6 +41,7 @@ export default async function Header(): Promise<React.JSX.Element> {
           >
             Profile
           </Link>
+          <NotificationBell />
         </nav>
       )}
 

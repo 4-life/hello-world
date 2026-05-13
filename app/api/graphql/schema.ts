@@ -2,6 +2,7 @@ import { AuthChecker, buildSchema } from 'type-graphql';
 import { type GraphQLSchema } from 'graphql';
 import { UserResolver } from './resolvers/UserResolver';
 import { VacationResolver } from './resolvers/VacationResolver';
+import { NotificationResolver } from './resolvers/NotificationResolver';
 import { Context } from '@/server/context';
 import {
   UsersFilter,
@@ -18,7 +19,7 @@ export const authChecker: AuthChecker<Context> = ({ context }, roles) => {
 
 export async function buildGqlSchema(): Promise<GraphQLSchema> {
   return buildSchema({
-    resolvers: [UserResolver, VacationResolver],
+    resolvers: [UserResolver, VacationResolver, NotificationResolver],
     orphanedTypes: [
       UsersFilter,
       PaginationInput,

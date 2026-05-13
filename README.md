@@ -21,9 +21,9 @@ No separate DTO, schema file, or generated code — add a field once and it prop
 ```ts
 // app/db/entities/User.ts
 
-@ObjectType('User')          // ← GraphQL type (name must be explicit, prod build mangles class names)
-@Entity({ name: 'users' })   // ← PostgreSQL table
-export class User {
+@ObjectType('User')          // ← GraphQL type (TypeGraphQL → Apollo)
+@Entity({ name: 'users' })   // ← PostgreSQL table (TypeORM)
+export class User {          // ← React components & server libs
   @Field(() => ID)
   @PrimaryGeneratedColumn('uuid')
   id: string;
