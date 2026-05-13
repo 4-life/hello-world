@@ -87,6 +87,7 @@ export class UsersFilter {
 ├── utils/
 ├── docker/
 │   ├── development/       compose.yaml (app + postgres)
+│   ├── staging/           Dockerfile (multi-stage) + compose.yaml
 │   └── production/        Dockerfile (multi-stage) + compose.yaml
 ├── eslint-rules/          Local ESLint rules
 │   └── require-typegraphql-explicit-name.mjs
@@ -139,7 +140,7 @@ npm run migration:run
 
 The CI/CD pipeline (GitHub Actions) does:
 
-1. **`checks` job** (runs on every push to `main` or `staging`):
+1. **`checks` job** (runs on every push to `main` or `stage`):
    - `npm run type-check`
    - `npm run lint`
 2. **`deploy` job** (only on `main`, only if `checks` passes):
@@ -185,6 +186,45 @@ The server needs this token to pull the Docker image from `ghcr.io`.
 3. Add it to the repository: **Settings → Secrets and variables → Actions → New repository secret**
    - Name: `GHCR_TOKEN`
    - Value: the token you just created
+
+## Environments
+
+### Overview
+
+| Environment | Branch | Docker files | GitHub environment |
+|---|---|---|---|
+| Development | — (local) | `docker/development/` | — |
+| Staging | `stage` | `docker/staging/` | `staging` |
+| Production | `main` | `docker/production/` | `production` |
+
+Each environment runs on its own server. SSH credentials (`SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY`, `SSH_PORT`) are stored per GitHub environment, so pushing to a branch only ever touches that environment's server.
+
+### Adding a new environment
+
+**1. Docker files** — create `docker/<env>/Dockerfile` and `docker/<env>/compose.yaml` modelled on the staging equivalents.
+
+**2. GitHub environment** — go to **Settings → Environments → New environment**, name it `<env>`, and add the same secrets and variables as `staging` (see [Required secrets / vars](#required-secrets--vars)) pointing to the new server.
+
+**3. Workflow job** — add the trigger branch and a new job to `.github/workflows/deploy.yml`, following `deploy-staging` as the template:
+
+```yaml
+# add the branch to the trigger
+on:
+  push:
+    branches:
+      - main
+      - stage
+      - <branch>
+
+# add the job
+deploy-<env>:
+  if: github.ref == 'refs/heads/<branch>'
+  needs: checks
+  environment: <env>
+  ...
+```
+
+The `environment: <env>` binding is what scopes the job to that environment's secrets, ensuring the deploy hits the correct server.
 
 ## Security
 

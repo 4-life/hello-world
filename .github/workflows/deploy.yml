@@ -1,10 +1,10 @@
-name: Deploy to production
+name: Deploy
 
 on:
   push:
     branches:
       - main
-      - staging
+      - stage
 
 jobs:
   checks:
@@ -123,6 +123,106 @@ jobs:
 
             echo "Starting application..."
             sudo docker compose -f /tmp/deploy/docker/production/compose.yaml up -d
+
+            echo "Cleaning up..."
+            sudo docker image prune -af
+            rm -rf /tmp/deploy
+
+  deploy-staging:
+    if: github.ref == 'refs/heads/stage'
+    needs: checks
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push app image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/staging/Dockerfile
+          push: true
+          target: runner
+          tags: ghcr.io/${{ github.repository }}:staging
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }}
+
+      - name: Build and push migrator image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/staging/Dockerfile
+          push: true
+          target: migrator
+          tags: ghcr.io/${{ github.repository }}:migrate-staging
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }}
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          NODE_ENV=production
+          NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+          NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }}
+          POSTGRES_USER=${{ vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ vars.POSTGRES_DB }}
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+          CLIENT_ID_GITHUB=${{ secrets.CLIENT_ID_GITHUB }}
+          CLIENT_SECRET_GITHUB=${{ secrets.CLIENT_SECRET_GITHUB }}
+          CLIENT_ID_GOOGLE=${{ secrets.CLIENT_ID_GOOGLE }}
+          CLIENT_SECRET_GOOGLE=${{ secrets.CLIENT_SECRET_GOOGLE }}
+          EOF
+
+      - name: Copy compose and env to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: ".env,docker/staging/compose.yaml"
+          target: "/tmp/deploy"
+
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+
+            echo "${{ secrets.GHCR_TOKEN }}" | sudo docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+            echo "Pulling images..."
+            sudo docker pull ghcr.io/${{ github.repository }}:staging
+            sudo docker pull ghcr.io/${{ github.repository }}:migrate-staging
+            sudo docker tag ghcr.io/${{ github.repository }}:staging app-staging
+
+            echo "Starting database..."
+            sudo docker compose -f /tmp/deploy/docker/staging/compose.yaml up -d db --wait
+
+            echo "Running migrations..."
+            sudo docker run --rm --network staging_network --env-file /tmp/deploy/.env ghcr.io/${{ github.repository }}:migrate-staging
+
+            echo "Starting application..."
+            sudo docker compose -f /tmp/deploy/docker/staging/compose.yaml up -d
 
             echo "Cleaning up..."
             sudo docker image prune -af

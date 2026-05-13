@@ -1,8 +1,33 @@
 services:
-  with-docker-multi-env-staging:
-    build:
-      context: ../../
-      dockerfile: docker/staging/Dockerfile
-    image: with-docker-multi-env-staging
+  app-staging:
+    image: app-staging
+    depends_on:
+      - db
     ports:
-      - "3002:3000"
+      - "3001:3000"
+    env_file: "../../.env"
+    networks:
+      - staging_network
+
+  db:
+    image: postgres:latest
+    env_file: "../../.env"
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql
+    networks:
+      - staging_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_staging_data:
+
+networks:
+  staging_network:
+    name: staging_network
+    driver: bridge
