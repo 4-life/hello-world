@@ -11,8 +11,8 @@ class SeedUsers1710000000002 {
       INSERT INTO users (id, login, password, "firstName", "lastName", email, role, "startWorkDate", "createdDate")
       VALUES
         (uuid_generate_v4(), 'user',    $1, 'John',    'Doe',  'user@example.com',    'user',    '2026-01-01', now()),
-        (uuid_generate_v4(), 'admin',   $2, 'Admin',   'Boss', 'admin@example.com',   'admin',   '2026-01-01', now()),
-        (uuid_generate_v4(), 'manager', $3, 'Manager', 'Boss', 'manager@example.com', 'manager', '2026-01-01', now())
+        (uuid_generate_v4(), 'admin',   $2, 'Admin',   'Boss', 'admin@example.com',   'admin',   '2025-05-01', now()),
+        (uuid_generate_v4(), 'manager', $3, 'Manager', 'Boss', 'manager@example.com', 'manager', '2025-08-01', now())
       `,
       [userPassword, adminPassword, managerPassword],
     );

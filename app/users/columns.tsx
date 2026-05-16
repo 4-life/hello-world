@@ -1,9 +1,55 @@
 'use client';
 
+import { JSX } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ColumnDef } from '@tanstack/react-table';
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { UsersQuery } from '@/app/libs/getUsers';
 import { calcAvailableDays } from '@/app/libs/vacationDays';
+
+function SortableHeader({
+  field,
+  label,
+}: {
+  field: string;
+  label: string;
+}): JSX.Element {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const currentField = searchParams.get('sortField');
+  const currentOrder = searchParams.get('sortOrder') ?? 'ASC';
+  const isActive = currentField === field;
+  const nextOrder = isActive && currentOrder === 'ASC' ? 'DESC' : 'ASC';
+
+  const handleSort = (): void => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('sortField', field);
+    params.set('sortOrder', nextOrder);
+    params.delete('page');
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  return (
+    <button
+      onClick={handleSort}
+      className="flex items-center gap-1 hover:text-foreground"
+    >
+      {label}
+      {isActive ? (
+        currentOrder === 'ASC' ? (
+          <ArrowUp size={14} />
+        ) : (
+          <ArrowDown size={14} />
+        )
+      ) : (
+        <ArrowUpDown size={14} className="text-muted-foreground" />
+      )}
+    </button>
+  );
+}
 
 type UserRow = UsersQuery['users']['items'][number];
 
@@ -50,5 +96,20 @@ export const columns: ColumnDef<UserRow>[] = [
       );
       return days ?? '—';
     },
+  },
+  {
+    accessorKey: 'startWorkDate',
+    header: () => (
+      <SortableHeader field="startWorkDate" label="Start work date" />
+    ),
+    cell: ({ row }) =>
+      row.original.startWorkDate
+        ? new Date(row.original.startWorkDate).toLocaleDateString()
+        : '—',
+  },
+  {
+    accessorKey: 'createdDate',
+    header: () => <SortableHeader field="createdDate" label="Created date" />,
+    cell: ({ row }) => new Date(row.original.createdDate).toLocaleDateString(),
   },
 ];

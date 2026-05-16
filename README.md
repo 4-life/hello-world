@@ -254,6 +254,17 @@ Protected pages and API endpoints use two complementary layers:
 - **Page-level** — server-side layouts call `getServerSession` (NextAuth). The `/users` route group's [`layout.tsx`](app/users/layout.tsx) redirects unauthenticated requests to `/` before any page content renders.
 - **GraphQL-level** — resolvers that require authentication are decorated with `@Authorized()` (TypeGraphQL). The `authChecker` in [`app/api/graphql/schema.ts`](app/api/graphql/schema.ts) reads `context.userId`, which is populated from the NextAuth session by [`server/context.ts`](server/context.ts). A `null` userId rejects the request. Role-based access (`@Authorized('admin')`) is also supported.
 
+### Web hardening (before going live)
+
+This template does not ship with web-layer hardening enabled out of the box. Apply the following before exposing the app to real users:
+
+- **Content Security Policy (CSP)** — add a `Content-Security-Policy` header (or `<meta>` tag) restricting `script-src`, `style-src`, `img-src`, `connect-src`, etc. to known origins. In Next.js, set it in [`next.config.ts`](next.config.ts) via `headers()` or in the Nginx config.
+- **XSS protection** — React escapes output by default, but review any `dangerouslySetInnerHTML` usage and sanitize any HTML coming from external sources (e.g. with [DOMPurify](https://github.com/cure53/DOMPurify)).
+- **CSRF protection** — GraphQL mutations over POST are not automatically CSRF-safe. Use `SameSite=Lax` (or `Strict`) on session cookies, or add a CSRF token layer (e.g. `csrf` npm package) to the GraphQL route handler.
+- **Security headers** — add `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Permissions-Policy` in Nginx or `next.config.ts`.
+- **Rate limiting** — Nginx rate-limits HTTP at 10 req/s. Consider adding resolver-level rate limiting for expensive GraphQL operations (e.g. auth mutations) using a library such as [graphql-rate-limit](https://github.com/teamplanes/graphql-rate-limit).
+- **Dependency audits** — run `npm audit` in CI and keep `npm audit --audit-level=high` clean before every release.
+
 ### What to audit when adding a feature
 
 - New environment variables → add to GitHub Secrets/Variables, not to the Dockerfile or source code

@@ -1,5 +1,6 @@
 import getUsers from '@/app/libs/getUsers';
 import { UserRole } from '@/app/db/entities/UserRole';
+import { UserSortField, SortOrder } from '@/app/db/entities';
 import { columns } from './columns';
 import { DataTable } from './data-table';
 import Pagination from '@/components/Pagination';
@@ -11,6 +12,8 @@ type Props = {
     limit?: string;
     role?: UserRole;
     email?: string;
+    sortField?: string;
+    sortOrder?: string;
   };
 };
 
@@ -24,7 +27,19 @@ export default async function UsersPage({
   const limit = Number(params.limit ?? 10);
   const offset = (page - 1) * limit;
 
-  const { data, error } = await getUsers({ role, email }, { limit, offset });
+  const sortField =
+    params.sortField && params.sortField in UserSortField
+      ? (params.sortField as UserSortField)
+      : undefined;
+  const sortOrder =
+    params.sortOrder === 'DESC' ? SortOrder.DESC : SortOrder.ASC;
+  const sort = sortField ? { field: sortField, order: sortOrder } : undefined;
+
+  const { data, error } = await getUsers(
+    { role, email },
+    { limit, offset },
+    sort,
+  );
 
   if (error) {
     return <p className="p-6 text-destructive">{error.message}</p>;

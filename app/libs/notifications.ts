@@ -24,13 +24,16 @@ export type NotificationItem = {
 };
 
 type NotificationsData = { notifications: NotificationItem[] };
+type Query = typeof useQuery<NotificationsData>;
 
-export function useNotifications(): ReturnType<typeof useQuery<NotificationsData>> {
+export function useNotifications(): ReturnType<Query> {
   return useQuery<NotificationsData>(NOTIFICATIONS_QUERY);
 }
 
-export function useMarkNotificationsRead(): ReturnType<
-  typeof useMutation<Record<'markNotificationsRead', boolean>>
-> {
-  return useMutation<Record<'markNotificationsRead', boolean>>(MARK_READ_MUTATION);
+type Mutation = typeof useMutation<Record<'markNotificationsRead', boolean>>;
+
+export function useMarkNotificationsRead(): ReturnType<Mutation> {
+  return useMutation<Record<'markNotificationsRead', boolean>>(
+    MARK_READ_MUTATION,
+  );
 }

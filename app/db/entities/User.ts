@@ -16,6 +16,7 @@ import {
   registerEnumType,
   Int,
 } from 'type-graphql';
+import { SortOrder } from './SortOrder';
 import { Vacation } from './Vacation';
 import { UserRole } from './UserRole';
 
@@ -149,6 +150,22 @@ export class UsersFilter {
 
   @Field(() => String, { nullable: true })
   email?: string;
+}
+
+export enum UserSortField {
+  startWorkDate = 'startWorkDate',
+  createdDate = 'createdDate',
+}
+
+registerEnumType(UserSortField, { name: 'UserSortField' });
+
+@InputType('UsersSortInput')
+export class UsersSortInput {
+  @Field(() => UserSortField)
+  field: UserSortField = UserSortField.createdDate;
+
+  @Field(() => SortOrder)
+  order: SortOrder = SortOrder.ASC;
 }
 
 @ObjectType('PaginatedUsersResponse')

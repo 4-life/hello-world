@@ -5,6 +5,7 @@ import {
   User,
   UpdateUserInput,
   UsersFilter,
+  UsersSortInput,
   PaginatedUsersResponse,
   PaginationInput,
 } from '@/app/db/entities';
@@ -22,6 +23,8 @@ export class UserResolver {
     @Arg('filter', () => UsersFilter, { nullable: true }) filter?: UsersFilter,
     @Arg('pagination', () => PaginationInput, { nullable: true })
     pagination?: PaginationInput,
+    @Arg('sort', () => UsersSortInput, { nullable: true })
+    sort?: UsersSortInput,
   ): Promise<PaginatedUsersResponse> {
     const skip = pagination?.offset ?? 0;
     const where: FindOptionsWhere<User> = {};
@@ -31,11 +34,14 @@ export class UserResolver {
     if (filter?.email) where.email = ILike(`%${filter.email}%`);
     if (filter?.role) where.role = filter.role;
 
+    const field = sort?.field ?? 'createdDate';
+    const order = sort?.order ?? 'ASC';
+
     const [items, total] = await this.repo.findAndCount({
       where,
       skip,
       take: pagination?.limit ?? 10,
-      order: { createdDate: 'ASC' },
+      order: { [field]: order },
       relations: ['vacations'],
     });
 
