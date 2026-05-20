@@ -226,6 +226,88 @@ deploy-<env>:
 
 The `environment: <env>` binding is what scopes the job to that environment's secrets, ensuring the deploy hits the correct server.
 
+## File storage (S3)
+
+Files are stored in AWS S3. The bucket is fully private — no object is ever publicly accessible. All reads and writes go through short-lived **presigned URLs** signed by the server.
+
+### Upload flow
+
+```
+1. Client  →  GraphQL mutation requestUploadUrl(contentType, ...)
+            ←  { uploadUrl (presigned PUT, 5 min), key }
+
+2. Client  →  PUT file directly to S3          (no server proxy)
+
+3. Client  →  GraphQL mutation confirmUpload(key, ...)
+              Server: fetches first bytes from S3, validates content
+              Server: deletes old file if one exists
+              Server: saves key to DB
+            ←  Entity with file field (presigned GET URL, 1 h TTL)
+```
+
+File fields on GraphQL types are `@FieldResolver` — they always return a fresh presigned GET URL, never the raw S3 key.
+
+### Security measures
+
+| Layer | What it does |
+|---|---|
+| Private bucket + Block Public Access ON | No anonymous reads or writes ever |
+| Content-type allowlist | Server rejects disallowed MIME types before issuing an upload URL |
+| `ContentType` locked in presigned PUT | S3 rejects the upload if the browser sends a mismatched `Content-Type` header |
+| Key scoped to owner path | Users can only confirm keys that belong to their own prefix |
+| Magic bytes check | Files whose content doesn't match the declared type are rejected and deleted from S3 |
+| `ResponseContentType` in presigned GET | Browser always receives the correct MIME type regardless of what was stored |
+| Old file deleted on replace | Orphaned objects are cleaned up immediately |
+
+### Bucket setup
+
+1. Create an S3 bucket in your AWS region.
+2. Under **Permissions**, enable **Block all public access**.
+3. Create an IAM user with the policy below (least-privilege — scoped to the prefix used by the feature):
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::YOUR_BUCKET_NAME/*"
+    }
+  ]
+}
+```
+
+4. Set the bucket **CORS policy** to allow direct PUT uploads from the browser:
+
+```json
+[
+  {
+    "AllowedHeaders": ["Content-Type"],
+    "AllowedMethods": ["PUT"],
+    "AllowedOrigins": [
+      "http://localhost:3000",
+      "https://your-production-domain.com",
+      "https://your-staging-domain.com"
+    ],
+    "MaxAgeSeconds": 3000
+  }
+]
+```
+
+### Environment variables
+
+Add to your `.env` (development) and to each GitHub environment (staging / production):
+
+| Name | Kind | Description |
+|---|---|---|
+| `AWS_REGION` | Variable | e.g. `eu-north-1` |
+| `S3_BUCKET_NAME` | Variable | The bucket name |
+| `AWS_ACCESS_KEY_ID` | Secret | IAM user access key |
+| `AWS_SECRET_ACCESS_KEY` | Secret | IAM user secret key |
+
+`S3_BUCKET_NAME` and `AWS_REGION` are also required as **build arguments** — `next.config.ts` reads them at build time to whitelist the bucket hostname for `next/image` optimization. Both Dockerfiles and the CI workflow are already wired to pass them.
+
 ## Security
 
 ### Secrets management

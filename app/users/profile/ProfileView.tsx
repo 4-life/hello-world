@@ -1,7 +1,7 @@
 import getUser from '@/app/libs/getUser';
 import { calcAvailableDays } from '@/app/libs/vacationDays';
 import VacationCalendar from '@/components/VacationCalendar';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import AvatarSection from '@/components/AvatarSection';
 
 interface Props {
   userId: string;
@@ -28,16 +28,13 @@ export default async function ProfileView({
 
       <div className="flex flex-col gap-6 lg:flex-row">
         <div className="rounded-lg border p-6 space-y-4 lg:w-80 lg:shrink-0">
-          <Avatar className="size-20">
-            {user.avatar && <AvatarImage src={user.avatar} alt={user.login} />}
-            <AvatarFallback className="text-2xl">
-              {[user.firstName, user.lastName]
-                .filter(Boolean)
-                .map((n) => n![0])
-                .join('')
-                .toUpperCase() || user.login[0].toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <AvatarSection
+            userId={user.id}
+            initialAvatarUrl={user.avatar}
+            login={user.login}
+            firstName={user.firstName}
+            lastName={user.lastName}
+          />
 
           <div className="flex flex-col gap-4 text-sm">
             <div>

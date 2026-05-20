@@ -1,4 +1,15 @@
-import { Resolver, Query, Mutation, Arg, Ctx, Authorized } from 'type-graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Arg,
+  Ctx,
+  Authorized,
+  FieldResolver,
+  Root,
+  ObjectType,
+  Field,
+} from 'type-graphql';
 import * as bcrypt from 'bcrypt';
 import { db } from '@/app/db/db';
 import {
@@ -12,6 +23,24 @@ import {
 import type { Context } from '@/server/context';
 import type { FindOptionsWhere } from 'typeorm';
 import { ILike } from 'typeorm';
+import {
+  isAllowedAvatarContentType,
+  buildAvatarKey,
+  getPresignedUploadUrl,
+  getPresignedReadUrl,
+  validateAndCleanup,
+  contentTypeFromKey,
+  deleteObject,
+} from '@/lib/s3';
+
+@ObjectType('AvatarUploadResponse')
+class AvatarUploadResponse {
+  @Field()
+  uploadUrl: string;
+
+  @Field()
+  key: string;
+}
 
 @Resolver(User)
 export class UserResolver {
@@ -99,5 +128,82 @@ export class UserResolver {
 
     await this.repo.remove(user);
     return true;
+  }
+
+  @FieldResolver(() => String, { nullable: true })
+  async avatar(@Root() user: User): Promise<string | null> {
+    if (!user.avatar) return null;
+    return getPresignedReadUrl(user.avatar);
+  }
+
+  @Authorized()
+  @Mutation(() => AvatarUploadResponse)
+  async requestAvatarUploadUrl(
+    @Ctx() ctx: Context,
+    @Arg('contentType') contentType: string,
+    @Arg('targetUserId', () => String, { nullable: true })
+    targetUserId?: string,
+  ): Promise<AvatarUploadResponse> {
+    const targetId = targetUserId ?? ctx.userId!;
+
+    if (
+      targetId !== ctx.userId &&
+      ctx.role !== 'admin' &&
+      ctx.role !== 'manager'
+    ) {
+      throw new Error('Not authorized to update other users');
+    }
+
+    if (!isAllowedAvatarContentType(contentType)) {
+      throw new Error(
+        'Unsupported content type. Allowed: image/jpeg, image/png, image/webp',
+      );
+    }
+
+    const key = buildAvatarKey(targetId, contentType);
+    const uploadUrl = await getPresignedUploadUrl(key, contentType);
+
+    return { uploadUrl, key };
+  }
+
+  @Authorized()
+  @Mutation(() => User)
+  async confirmAvatarUpload(
+    @Ctx() ctx: Context,
+    @Arg('key') key: string,
+    @Arg('targetUserId', () => String, { nullable: true })
+    targetUserId?: string,
+  ): Promise<User> {
+    const targetId = targetUserId ?? ctx.userId!;
+
+    if (
+      targetId !== ctx.userId &&
+      ctx.role !== 'admin' &&
+      ctx.role !== 'manager'
+    ) {
+      throw new Error('Not authorized to update other users');
+    }
+
+    if (!key.startsWith(`avatars/${targetId}/`)) {
+      throw new Error('Invalid key');
+    }
+
+    const contentType = contentTypeFromKey(key);
+    if (!contentType) {
+      throw new Error('Unrecognised file extension in key');
+    }
+
+    const isValid = await validateAndCleanup(key, contentType);
+    if (!isValid) {
+      throw new Error('File content does not match the declared image type');
+    }
+
+    const existing = await this.repo.findOneByOrFail({ id: targetId });
+    if (existing.avatar && existing.avatar !== key) {
+      await deleteObject(existing.avatar);
+    }
+
+    await this.repo.update({ id: targetId }, { avatar: key });
+    return this.repo.findOneByOrFail({ id: targetId });
   }
 }

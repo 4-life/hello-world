@@ -16,6 +16,15 @@ const nextConfig: NextConfig = {
     // We're defaulting to optimizing images with
     // Sharp, which is built-into `next start`
     remotePatterns: [
+      ...(process.env.S3_BUCKET_NAME && process.env.AWS_REGION
+        ? [
+            {
+              protocol: 'https' as const,
+              hostname: `${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com`,
+              pathname: '/**',
+            },
+          ]
+        : []),
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',

@@ -5,6 +5,7 @@ import { Inter } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
+import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -27,6 +28,7 @@ export default function RootLayout({
             <main className="flex flex-1 flex-col">{children}</main>
             <Footer />
           </div>
+          <Toaster position="bottom-right" />
         </Providers>
       </body>
     </html>
