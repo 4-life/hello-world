@@ -1,5 +1,8 @@
 # Next.js Self-Hosted
 
+[![Checks](https://github.com/4-life/hello-world/actions/workflows/deploy.yml/badge.svg?event=push)](https://github.com/4-life/hello-world/actions/workflows/deploy.yml)
+[![E2E](https://github.com/4-life/hello-world/actions/workflows/e2e.yml/badge.svg?event=push)](https://github.com/4-life/hello-world/actions/workflows/e2e.yml)
+
 A self-hosted Next.js application with a single source of truth for all layers — database, GraphQL API, and React front-end — built on top of the [Next.js self-hosting guide](https://nextjs.org/docs/app/guides/self-hosting).
 
 ## Key idea: one type, all layers
