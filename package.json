@@ -10,7 +10,8 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "dependencies": {
     "@apollo/client": "^4.0.9",
@@ -64,6 +65,8 @@
     "eslint-plugin-require-explicit-generics": "^1.0.0",
     "prettier": "^3.8.1",
     "typescript": "^5.7.2",
+    "unplugin-swc": "^1.5.9",
+    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^0.34.6"
   }
 }

@@ -2,11 +2,16 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import entities from './entities';
 
-const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB } = process.env;
+const {
+  POSTGRES_USER,
+  POSTGRES_PASSWORD,
+  POSTGRES_DB,
+  POSTGRES_HOST = 'db',
+} = process.env;
 
 const databaseUrl =
   POSTGRES_USER && POSTGRES_PASSWORD && POSTGRES_DB
-    ? `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}`
+    ? `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}`
     : null;
 
 export const db = new DataSource({
@@ -19,10 +24,11 @@ export const db = new DataSource({
   subscribers: [],
 });
 
-if (databaseUrl) {
-  db.initialize().catch((_err) => {
-    // eslint-disable-next-line no-console
-    console.error('Database connection error:', _err);
-    process.exit(1);
-  });
-}
+// Exported so callers can await readiness without risk of double-init
+export const dbInit: Promise<DataSource> | null = databaseUrl
+  ? db.initialize().catch((_err) => {
+      // eslint-disable-next-line no-console
+      console.error('Database connection error:', _err);
+      process.exit(1);
+    })
+  : null;

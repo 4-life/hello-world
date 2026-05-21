@@ -2,13 +2,13 @@ const { DataSource } = require('typeorm');
 const path = require('path');
 
 function getDatabaseUrl() {
-  const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB } = process.env;
+  const { POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, POSTGRES_HOST = 'db' } = process.env;
 
   if (!POSTGRES_USER || !POSTGRES_PASSWORD || !POSTGRES_DB) {
     throw new Error('Database environment variables is not set');
   }
 
-  return `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}`;
+  return `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}`;
 }
 
 const db = new DataSource({

@@ -1,6 +1,6 @@
 import { ApolloServer } from '@apollo/server';
 import { buildGqlSchema } from '@/app/api/graphql/schema';
-import { db } from '@/app/db/db';
+import { dbInit } from '@/app/db/db';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { getApolloCache } from './cache';
 
@@ -8,9 +8,7 @@ let server: ApolloServer;
 
 export async function getApolloServer(): Promise<ApolloServer> {
   if (!server) {
-    if (!db.isInitialized) {
-      await db.initialize();
-    }
+    await dbInit;
 
     const schema = await buildGqlSchema();
 

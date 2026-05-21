@@ -96,6 +96,7 @@ export class User {
   @BeforeInsert()
   createDates(): void {
     this.createdDate = new Date();
+    this.updatedDate = new Date();
   }
 
   @BeforeUpdate()

@@ -130,6 +130,7 @@ export class UserResolver {
 
     const user = repo.create({
       email,
+      login: email,
       password: await bcrypt.hash(password, 10),
     });
 
