@@ -124,13 +124,6 @@ http://localhost:3000/api/graphql
 
 Open it in a browser to explore the schema, run queries, and test mutations interactively.
 
-### Type-check & lint
-
-```bash
-npm run type-check   # tsc --noEmit
-npm run lint         # eslint .
-```
-
 ## Database migrations
 
 Migrations live in [`app/db/migrations/`](app/db/migrations/) as plain `.js` files (no `ts-node` needed in production).
@@ -143,9 +136,7 @@ npm run migration:run
 
 The CI/CD pipeline (GitHub Actions) does:
 
-1. **`checks` job** (runs on every push to `main` or `stage`):
-   - `npm run type-check`
-   - `npm run lint`
+1. **`checks` job** (runs on every push to `main` or `stage`)
 2. **`deploy` job** (only on `main`, only if `checks` passes):
    - Builds and pushes two Docker images to `ghcr.io`:
      - `:latest` — the app (`runner` stage)
@@ -180,7 +171,8 @@ chmod +x ~/deploy.sh && SSH_USER=myuser SSH_PORT=22 ./deploy.sh
 | `CLIENT_ID_GITHUB`, `CLIENT_SECRET_GITHUB` | Secrets |
 | `CLIENT_ID_GOOGLE`, `CLIENT_SECRET_GOOGLE` | Secrets |
 
-#### Creating `GHCR_TOKEN`
+<details>
+<summary>Creating <code>GHCR_TOKEN</code></summary>
 
 The server needs this token to pull the Docker image from `ghcr.io`.
 
@@ -189,6 +181,8 @@ The server needs this token to pull the Docker image from `ghcr.io`.
 3. Add it to the repository: **Settings → Secrets and variables → Actions → New repository secret**
    - Name: `GHCR_TOKEN`
    - Value: the token you just created
+
+</details>
 
 ## Environments
 
@@ -202,7 +196,8 @@ The server needs this token to pull the Docker image from `ghcr.io`.
 
 Each environment runs on its own server. SSH credentials (`SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY`, `SSH_PORT`) are stored per GitHub environment, so pushing to a branch only ever touches that environment's server.
 
-### Adding a new environment
+<details>
+<summary>Adding a new environment</summary>
 
 **1. Docker files** — create `docker/<env>/Dockerfile` and `docker/<env>/compose.yaml` modelled on the staging equivalents.
 
@@ -228,6 +223,8 @@ deploy-<env>:
 ```
 
 The `environment: <env>` binding is what scopes the job to that environment's secrets, ensuring the deploy hits the correct server.
+
+</details>
 
 ## File storage (S3)
 
