@@ -10,11 +10,10 @@ export default [
     ignores: [
       'node_modules/**',
       '**/*.d.ts',
-      '**/*.test.ts',
       'generated/**',
-      '**/*.test.js',
       '**/*.js',
       '**/*.mjs',
+      'tests/**',
     ],
   },
 
