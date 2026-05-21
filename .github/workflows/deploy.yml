@@ -39,9 +39,15 @@ jobs:
     needs: [checks, e2e]
     uses: ./.github/workflows/deploy-prod.yml
     secrets: inherit
+    permissions:
+      contents: read
+      packages: write
 
   deploy-staging:
     if: github.ref == 'refs/heads/stage'
     needs: [checks, e2e]
     uses: ./.github/workflows/deploy-staging.yml
     secrets: inherit
+    permissions:
+      contents: read
+      packages: write
