@@ -28,6 +28,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Test
+        run: npm test
+
   deploy:
     if: github.ref == 'refs/heads/main'
     needs: checks
