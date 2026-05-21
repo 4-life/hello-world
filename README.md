@@ -230,6 +230,9 @@ The `environment: <env>` binding is what scopes the job to that environment's se
 
 Files are stored in AWS S3. The bucket is fully private — no object is ever publicly accessible. All reads and writes go through short-lived **presigned URLs** signed by the server.
 
+<details>
+<summary>Upload flow, security measures, bucket setup, and environment variables</summary>
+
 ### Upload flow
 
 ```
@@ -308,6 +311,8 @@ Add to your `.env` (development) and to each GitHub environment (staging / produ
 
 `S3_BUCKET_NAME` and `AWS_REGION` are also required as **build arguments** — `next.config.ts` reads them at build time to whitelist the bucket hostname for `next/image` optimization. Both Dockerfiles and the CI workflow are already wired to pass them.
 
+</details>
+
 ## Security
 
 ### Secrets management
@@ -346,6 +351,7 @@ This template does not ship with web-layer hardening enabled out of the box. App
 - **Security headers** — add `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Permissions-Policy` in Nginx or `next.config.ts`.
 - **Rate limiting** — Nginx rate-limits HTTP at 10 req/s. Consider adding resolver-level rate limiting for expensive GraphQL operations (e.g. auth mutations) using a library such as [graphql-rate-limit](https://github.com/teamplanes/graphql-rate-limit).
 - **Dependency audits** — run `npm audit` in CI and keep `npm audit --audit-level=high` clean before every release.
+- **Structured logging** — the app currently has no production logger. Before going live, add structured logs (e.g. [pino](https://github.com/pinojs/pino)) with a `requestId` per GraphQL operation so errors and slow queries can be traced end-to-end. Key events to cover: every operation name + duration + `userId`, failed auth attempts, and mutations that touch other users' data.
 
 ### What to audit when adding a feature
 
