@@ -9,6 +9,12 @@ services:
     networks:
       - my_network
 
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+    networks:
+      - my_network
+
   db:
     image: postgres:latest
     env_file: "../../.env"

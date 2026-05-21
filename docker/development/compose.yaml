@@ -9,6 +9,7 @@ services:
     image: my-app-development
     depends_on:
       - db
+      - redis
     ports:
       - "3000:3000"
     env_file: "../../.env.development.sample"
@@ -17,6 +18,14 @@ services:
     networks:
       - my_network
     command: sh -c "npm install @next/swc-linux-x64-musl --no-save 2>/dev/null; npm run migration:run && npm run dev"
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+    ports:
+      - '6379:6379'
+    networks:
+      - my_network
 
   db:
     image: postgres:latest

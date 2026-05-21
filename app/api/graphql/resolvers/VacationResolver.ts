@@ -5,7 +5,10 @@ import { Notification } from '@/app/db/entities/Notification';
 import { User } from '@/app/db/entities/User';
 import { calcAvailableDays } from '@/app/libs/vacationDays';
 import { notifier } from '@/server/notifier';
+import { getApolloCache } from '@/server/cache';
 import type { Context } from '@/server/context';
+
+const userKey = (id: string): string => `user:${id}`;
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString('en-GB', {
@@ -51,6 +54,7 @@ export class VacationResolver {
 
     const vacationUserId = vacation.user.id;
     await this.repo.remove(vacation);
+    await getApolloCache().delete(userKey(vacationUserId));
 
     if (ctx.userId && ctx.userId !== vacationUserId) {
       void saveNotification(
@@ -91,6 +95,7 @@ export class VacationResolver {
       info: data.info,
     });
     const saved = await this.repo.save(vacation);
+    await getApolloCache().delete(userKey(data.userId));
 
     if (ctx.userId && ctx.userId !== data.userId) {
       void saveNotification(

@@ -3,9 +3,16 @@ services:
     image: app-staging
     depends_on:
       - db
+      - redis
     ports:
       - "3001:3000"
     env_file: "../../.env"
+    networks:
+      - staging_network
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
     networks:
       - staging_network
 

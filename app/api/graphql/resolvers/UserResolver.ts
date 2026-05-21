@@ -21,8 +21,12 @@ import {
   PaginationInput,
 } from '@/app/db/entities';
 import type { Context } from '@/server/context';
+import { getApolloCache } from '@/server/cache';
 import type { FindOptionsWhere } from 'typeorm';
 import { ILike } from 'typeorm';
+
+const USER_TTL = 300;
+const userKey = (id: string): string => `user:${id}`;
 import {
   isAllowedAvatarContentType,
   buildAvatarKey,
@@ -79,7 +83,17 @@ export class UserResolver {
 
   @Query(() => User, { nullable: true })
   async user(@Arg('id') id: string): Promise<User | null> {
-    return this.repo.findOne({ where: { id }, relations: ['vacations'] });
+    const cache = getApolloCache();
+    const cached = await cache.get(userKey(id));
+    if (cached) return JSON.parse(cached) as User;
+
+    const user = await this.repo.findOne({
+      where: { id },
+      relations: ['vacations'],
+    });
+    if (user)
+      await cache.set(userKey(id), JSON.stringify(user), { ttl: USER_TTL });
+    return user;
   }
 
   @Authorized()
@@ -98,7 +112,9 @@ export class UserResolver {
     const user = await this.repo.findOneByOrFail({ id: targetId });
     const { id: _, ...fields } = data;
     Object.assign(user, fields);
-    return this.repo.save(user);
+    const saved = await this.repo.save(user);
+    await getApolloCache().delete(userKey(targetId));
+    return saved;
   }
 
   @Mutation(() => User)
@@ -127,6 +143,7 @@ export class UserResolver {
     if (!user) return false;
 
     await this.repo.remove(user);
+    await getApolloCache().delete(userKey(id));
     return true;
   }
 
@@ -204,6 +221,7 @@ export class UserResolver {
     }
 
     await this.repo.update({ id: targetId }, { avatar: key });
+    await getApolloCache().delete(userKey(targetId));
     return this.repo.findOneByOrFail({ id: targetId });
   }
 }
