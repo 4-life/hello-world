@@ -28,6 +28,7 @@ export default defineConfig({
     testTimeout: 15_000,
     hookTimeout: 30_000,
     setupFiles: ['reflect-metadata'],
-    threads: false,
+    pool: 'forks',
+    poolOptions: { forks: { singleFork: true } },
   },
 });
