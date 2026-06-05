@@ -27,10 +27,10 @@ export default function Filters(): React.JSX.Element {
     <div className="flex flex-wrap items-center gap-3">
       <input
         type="text"
-        placeholder="Filter by email…"
-        defaultValue={searchParams.get('email') ?? ''}
-        onChange={(e) => update('email', e.target.value.trim())}
-        className="h-8 rounded-md border border-input bg-background px-3 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
+        placeholder="Search by name, login or email…"
+        defaultValue={searchParams.get('query') ?? ''}
+        onChange={(e) => update('query', e.target.value.trim())}
+        className="h-8 w-64 rounded-md border border-input bg-background px-3 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
       />
 
       <select

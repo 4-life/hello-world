@@ -26,7 +26,7 @@ export async function buildGqlSchema(): Promise<GraphQLSchema> {
       UpdateUserInput,
       PaginatedUsersResponse,
     ],
-    validate: false,
+    validate: { forbidUnknownValues: false },
     authChecker,
   });
 }

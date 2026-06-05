@@ -5,16 +5,17 @@ import { columns } from './columns';
 import { DataTable } from './data-table';
 import Pagination from '@/components/Pagination';
 import Filters from '@/components/Filters';
+import CreateUserDialog from '@/components/CreateUserDialog';
 
 type Props = {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
     limit?: string;
     role?: UserRole;
-    email?: string;
+    query?: string;
     sortField?: string;
     sortOrder?: string;
-  };
+  }>;
 };
 
 export default async function UsersPage({
@@ -22,7 +23,7 @@ export default async function UsersPage({
 }: Props): Promise<React.JSX.Element> {
   const params = await searchParams;
   const role = params.role;
-  const email = params.email;
+  const query = params.query;
   const page = Number(params.page ?? 1);
   const limit = Number(params.limit ?? 10);
   const offset = (page - 1) * limit;
@@ -36,7 +37,7 @@ export default async function UsersPage({
   const sort = sortField ? { field: sortField, order: sortOrder } : undefined;
 
   const { data, error } = await getUsers(
-    { role, email },
+    { role, query },
     { limit, offset },
     sort,
   );
@@ -49,12 +50,15 @@ export default async function UsersPage({
 
   return (
     <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">
-        Users{' '}
-        <span className="text-sm font-normal text-muted-foreground">
-          ({data?.users.total ?? 0})
-        </span>
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">
+          Users{' '}
+          <span className="text-sm font-normal text-muted-foreground">
+            ({data?.users.total ?? 0})
+          </span>
+        </h1>
+        <CreateUserDialog />
+      </div>
 
       <Filters />
 

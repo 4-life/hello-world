@@ -25,6 +25,24 @@ export async function getApolloServer(): Promise<ApolloServer> {
       schema,
       cache: getApolloCache(),
       plugins,
+      formatError(formatted) {
+        const raw = formatted.extensions?.validationErrors as
+          | { property: string; constraints: Record<string, string> }[]
+          | undefined;
+
+        if (!raw?.length) return formatted;
+
+        const fields: Record<string, string> = {};
+        raw.forEach(({ property, constraints }) => {
+          fields[property] = Object.values(constraints)[0];
+        });
+
+        return {
+          ...formatted,
+          message: 'Validation failed',
+          extensions: { code: 'VALIDATION_ERROR', fields },
+        };
+      },
     });
   }
   return server;

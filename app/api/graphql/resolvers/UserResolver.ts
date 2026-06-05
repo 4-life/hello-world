@@ -11,16 +11,21 @@ import {
   Field,
 } from 'type-graphql';
 import * as bcrypt from 'bcrypt';
-import { checkSignUpRateLimit } from '@/server/rateLimiter';
+import {
+  checkSignUpRateLimit,
+  checkCreateUserRateLimit,
+} from '@/server/rateLimiter';
 import { db } from '@/app/db/db';
 import {
   User,
+  CreateUserInput,
   UpdateUserInput,
   UsersFilter,
   UsersSortInput,
   PaginatedUsersResponse,
   PaginationInput,
 } from '@/app/db/entities';
+import { UserRole } from '@/app/db/entities/UserRole';
 import type { Context } from '@/server/context';
 import { getApolloCache } from '@/server/cache';
 import type { FindOptionsWhere } from 'typeorm';
@@ -61,12 +66,21 @@ export class UserResolver {
     sort?: UsersSortInput,
   ): Promise<PaginatedUsersResponse> {
     const skip = pagination?.offset ?? 0;
-    const where: FindOptionsWhere<User> = {};
+    const base: FindOptionsWhere<User> = {};
 
-    if (filter?.id) where.id = filter.id;
-    if (filter?.login) where.login = filter.login;
-    if (filter?.email) where.email = ILike(`%${filter.email}%`);
-    if (filter?.role) where.role = filter.role;
+    if (filter?.id) base.id = filter.id;
+    if (filter?.login) base.login = filter.login;
+    if (filter?.role) base.role = filter.role;
+
+    const where: FindOptionsWhere<User> | FindOptionsWhere<User>[] =
+      filter?.query
+        ? [
+            { ...base, login: ILike(`%${filter.query}%`) },
+            { ...base, email: ILike(`%${filter.query}%`) },
+            { ...base, firstName: ILike(`%${filter.query}%`) },
+            { ...base, lastName: ILike(`%${filter.query}%`) },
+          ]
+        : base;
 
     const field = sort?.field ?? 'createdDate';
     const order = sort?.order ?? 'ASC';
@@ -116,6 +130,33 @@ export class UserResolver {
     const saved = await this.repo.save(user);
     await getApolloCache().delete(userKey(targetId));
     return saved;
+  }
+
+  @Authorized('manager', 'admin')
+  @Mutation(() => User)
+  async createUser(
+    @Ctx() ctx: Context,
+    @Arg('data') data: CreateUserInput,
+  ): Promise<User> {
+    await checkCreateUserRateLimit(ctx.userId);
+
+    const existing = await this.repo.findOne({
+      where: [{ login: data.login }, { email: data.email }],
+    });
+    if (existing)
+      throw new Error('User with this login or email already exists');
+
+    const user = this.repo.create({
+      login: data.login,
+      email: data.email,
+      password: await bcrypt.hash(data.password, 10),
+      role: data.role ?? UserRole.USER,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      phone: data.phone,
+    });
+
+    return this.repo.save(user);
   }
 
   @Mutation(() => User)

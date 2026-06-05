@@ -85,3 +85,49 @@ export async function resetSignInRateLimit(ip: string): Promise<void> {
     signInInsurance.delete(ip),
   ]);
 }
+
+const CREATE_USER_POINTS = 30;
+const CREATE_USER_DURATION = 3600;
+
+const createUserInsurance = new RateLimiterMemory({
+  points: CREATE_USER_POINTS,
+  duration: CREATE_USER_DURATION,
+});
+const createUserLimiter = new RateLimiterRedis({
+  storeClient: redis,
+  keyPrefix: 'rl:createUser',
+  points: CREATE_USER_POINTS,
+  duration: CREATE_USER_DURATION,
+  insuranceLimiter: createUserInsurance,
+});
+
+export async function checkCreateUserRateLimit(
+  userId: string | null,
+): Promise<void> {
+  const key = userId ?? 'unknown';
+  try {
+    await createUserLimiter.consume(key);
+  } catch (res) {
+    if (res && typeof res === 'object' && 'msBeforeNext' in res) {
+      const { msBeforeNext } = res as { msBeforeNext: number };
+      const retrySecs = Math.ceil(msBeforeNext / 1000);
+      throw new GraphQLError('Too many requests', {
+        extensions: {
+          code: 'TOO_MANY_REQUESTS',
+          http: {
+            status: 429,
+            headers: new Headers({
+              'Retry-After': String(retrySecs),
+              'X-RateLimit-Limit': String(CREATE_USER_POINTS),
+              'X-RateLimit-Remaining': '0',
+              'X-RateLimit-Reset': String(
+                Math.ceil(Date.now() / 1000 + retrySecs),
+              ),
+            }),
+          },
+        },
+      });
+    }
+    throw res;
+  }
+}
