@@ -17,11 +17,9 @@
     "@apollo/client": "^4.0.9",
     "@apollo/client-integration-nextjs": "^0.14.1",
     "@apollo/server": "^5.1.0",
-    "@apollo/utils.keyvadapter": "^3.1.0",
     "@as-integrations/next": "^4.1.0",
     "@aws-sdk/client-s3": "^3.1049.0",
     "@aws-sdk/s3-request-presigner": "^3.1049.0",
-    "@keyv/redis": "^2.8.5",
     "@swc/core": "^1.15.2",
     "@tailwindcss/postcss": "^4.2.2",
     "@tanstack/react-table": "^8.21.3",
@@ -31,6 +29,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "ioredis": "^5.6.1",
     "lucide-react": "^1.8.0",
     "next": "^16.2.6",
     "next-auth": "^4.24.14",
@@ -39,6 +38,7 @@
     "postcss": "^8.5.10",
     "postgres": "^3.4.5",
     "radix-ui": "^1.4.3",
+    "rate-limiter-flexible": "^7.1.1",
     "react": "19.0.0",
     "react-day-picker": "^9.14.0",
     "react-dom": "19.0.0",
@@ -67,6 +67,6 @@
     "typescript": "^5.7.2",
     "unplugin-swc": "^1.5.9",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^0.34.6"
+    "vitest": "^4.1.8"
   }
 }

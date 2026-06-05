@@ -6,8 +6,8 @@ let started = false;
 export async function gql<T = Record<string, unknown>>(
   query: string,
   variables?: Record<string, unknown>,
-  ctx: Context = { userId: null, role: null },
-): Promise<{ data?: T; errors?: { message: string }[] }> {
+  ctx: Context = { userId: null, role: null, ip: null },
+): Promise<{ data?: T; errors?: { message: string; extensions?: Record<string, unknown> }[] }> {
   const server = await getApolloServer();
 
   if (!started) {
@@ -21,5 +21,5 @@ export async function gql<T = Record<string, unknown>>(
   );
 
   if (res.body.kind !== 'single') throw new Error('Unexpected incremental response');
-  return res.body.singleResult as { data?: T; errors?: { message: string }[] };
+  return res.body.singleResult as { data?: T; errors?: { message: string; extensions?: Record<string, unknown> }[] };
 }

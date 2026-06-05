@@ -11,6 +11,7 @@ import {
   Field,
 } from 'type-graphql';
 import * as bcrypt from 'bcrypt';
+import { checkSignUpRateLimit } from '@/server/rateLimiter';
 import { db } from '@/app/db/db';
 import {
   User,
@@ -119,9 +120,12 @@ export class UserResolver {
 
   @Mutation(() => User)
   async signUp(
+    @Ctx() ctx: Context,
     @Arg('email') email: string,
     @Arg('password') password: string,
   ): Promise<User> {
+    await checkSignUpRateLimit(ctx.ip);
+
     const repo = this.repo;
 
     if (await repo.findOne({ where: { email } })) {

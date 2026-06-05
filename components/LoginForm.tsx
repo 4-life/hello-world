@@ -24,7 +24,11 @@ export default function LoginForm(): React.JSX.Element {
     setIsLoading(false);
 
     if (result?.error) {
-      setError('Invalid login or password');
+      setError(
+        result.error.toLowerCase().startsWith('too many')
+          ? result.error
+          : 'Invalid login or password',
+      );
     } else {
       window.location.href = '/users';
     }

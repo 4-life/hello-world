@@ -7,11 +7,15 @@ describe('countUsedDays', () => {
   });
 
   it('counts a single day (same start and end)', () => {
-    expect(countUsedDays([{ startDate: '2024-01-01', endDate: '2024-01-01' }])).toBe(1);
+    expect(
+      countUsedDays([{ startDate: '2024-01-01', endDate: '2024-01-01' }]),
+    ).toBe(1);
   });
 
   it('counts days inclusively', () => {
-    expect(countUsedDays([{ startDate: '2024-01-01', endDate: '2024-01-05' }])).toBe(5);
+    expect(
+      countUsedDays([{ startDate: '2024-01-01', endDate: '2024-01-05' }]),
+    ).toBe(5);
   });
 
   it('sums multiple vacation ranges', () => {

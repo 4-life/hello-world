@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { gql } from '../helpers/server';
 import { ensureDb, truncateAll, createUser } from '../helpers/db';
 import { UserRole } from '@/app/db/entities/UserRole';
+import { resetSignUpRateLimit } from '@/server/rateLimiter';
 
 const SIGN_UP = `
   mutation SignUp($email: String!, $password: String!) {
@@ -28,6 +29,8 @@ describe('user', () => {
 
   beforeEach(async () => {
     await truncateAll();
+    await resetSignUpRateLimit('unknown');
+    await resetSignUpRateLimit('test-rl-ip');
   });
 
   describe('signUp', () => {
@@ -40,6 +43,16 @@ describe('user', () => {
       await createUser({ email: 'dup@test.com' });
       const { errors } = await gql(SIGN_UP, { email: 'dup@test.com', password: 'secret' });
       expect(errors?.[0].message).toMatch(/already exists/i);
+    });
+
+    it('returns 429 after 5 attempts from the same IP', async () => {
+      const ip = 'test-rl-ip';
+      for (let i = 0; i < 5; i++) {
+        await gql(SIGN_UP, { email: `rl${i}@test.com`, password: 'secret' }, { userId: null, role: null, ip });
+      }
+      const { errors } = await gql(SIGN_UP, { email: 'blocked@test.com', password: 'secret' }, { userId: null, role: null, ip });
+      expect(errors?.[0].message).toMatch(/too many requests/i);
+      expect(errors?.[0].extensions?.code).toBe('TOO_MANY_REQUESTS');
     });
   });
 

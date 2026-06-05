@@ -5,6 +5,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { db } from '@/app/db/db';
 import { User } from '@/app/db/entities/User';
 import * as bcrypt from 'bcrypt';
+import { checkSignInRateLimit } from '@/server/rateLimiter';
 
 export const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -31,7 +32,16 @@ export const authOptions: AuthOptions = {
         login: {},
         password: {},
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
+        const forwarded = req.headers?.['x-forwarded-for'];
+        const ip =
+          (Array.isArray(forwarded)
+            ? forwarded[0]
+            : forwarded?.split(',')[0]) ??
+          req.headers?.['x-real-ip'] ??
+          null;
+        await checkSignInRateLimit(ip);
+
         const repo = db.getRepository(User);
 
         const user = await repo.findOne({
