@@ -1,4 +1,4 @@
-# Next.js Self-Hosted
+# GraphQL NextJS boilerplate
 
 [![Checks](https://github.com/4-life/hello-world/actions/workflows/deploy.yml/badge.svg?event=push)](https://github.com/4-life/hello-world/actions/workflows/deploy.yml)
 [![E2E](https://github.com/4-life/hello-world/actions/workflows/e2e.yml/badge.svg?event=push)](https://github.com/4-life/hello-world/actions/workflows/e2e.yml)
