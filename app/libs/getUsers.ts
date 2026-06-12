@@ -16,10 +16,9 @@ export interface UsersQuery {
       firstName?: User['firstName'] | null;
       lastName?: User['lastName'] | null;
       email?: User['email'] | null;
+      avatar?: User['avatar'] | null;
       role: User['role'];
-      startWorkDate?: User['startWorkDate'] | null;
       createdDate: User['createdDate'];
-      vacations: { startDate: Date; endDate: Date }[];
     }[];
     total: number;
   };
@@ -38,13 +37,9 @@ const GET_USERS = gql`
         firstName
         lastName
         email
+        avatar
         role
-        startWorkDate
         createdDate
-        vacations {
-          startDate
-          endDate
-        }
       }
       total
     }

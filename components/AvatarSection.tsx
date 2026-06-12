@@ -11,6 +11,7 @@ import {
   useConfirmAvatarUpload,
   useRequestAvatarUploadUrl,
 } from '@/app/libs/avatarUpload';
+import { getInitials } from '@/lib/utils';
 
 interface Props {
   userId: string;
@@ -108,12 +109,7 @@ export default function AvatarSection({
     }
   }
 
-  const initials =
-    [firstName, lastName]
-      .filter(Boolean)
-      .map((n) => n![0])
-      .join('')
-      .toUpperCase() || login[0].toUpperCase();
+  const initials = getInitials(firstName, lastName, login);
 
   return (
     <>

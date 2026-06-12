@@ -1,6 +1,6 @@
 import { getClient } from '@/server/getServerApolloClient';
 import { gql } from '@apollo/client';
-import { User, Vacation } from '../db/entities';
+import { User } from '../db/entities';
 import { cache } from 'react';
 
 export interface UserQuery {
@@ -14,12 +14,6 @@ export interface UserQuery {
     avatar?: User['avatar'];
     role: User['role'];
     createdDate: User['createdDate'];
-    startWorkDate?: string | null;
-    vacations: {
-      id: Vacation['id'];
-      startDate: string;
-      endDate: string;
-    }[];
   } | null;
 }
 
@@ -35,13 +29,6 @@ const GET_USER = gql`
       avatar
       role
       createdDate
-      startWorkDate
-      vacations {
-        id
-        startDate
-        endDate
-        info
-      }
     }
   }
 `;

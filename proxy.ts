@@ -17,9 +17,15 @@ export async function proxy(req: NextRequest): Promise<NextResponse> {
     }
   }
 
+  if (pathname.startsWith('/pay')) {
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set('x-pathname', pathname);
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/', '/users/:path*'],
+  matcher: ['/', '/users/:path*', '/pay/:path*'],
 };

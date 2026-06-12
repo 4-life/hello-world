@@ -2,7 +2,7 @@ import getUsers from '@/app/libs/getUsers';
 import { UserRole } from '@/app/db/entities/UserRole';
 import { UserSortField, SortOrder } from '@/app/db/entities';
 import { columns } from './columns';
-import { DataTable } from './data-table';
+import { DataTable } from '@/components/DataTable';
 import Pagination from '@/components/Pagination';
 import Filters from '@/components/Filters';
 import CreateUserDialog from '@/components/CreateUserDialog';
@@ -62,7 +62,11 @@ export default async function UsersPage({
 
       <Filters />
 
-      <DataTable columns={columns} data={users} />
+      <DataTable
+        columns={columns}
+        data={users}
+        emptyMessage="No users found."
+      />
 
       <Pagination limit={limit} page={page} total={data?.users.total ?? 0} />
     </div>

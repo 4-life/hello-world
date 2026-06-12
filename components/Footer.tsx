@@ -5,7 +5,7 @@ const appEnv =
 export default function Footer(): React.JSX.Element {
   return (
     <footer className="py-4 text-center text-sm text-muted-foreground">
-      © {new Date().getFullYear()} Company Vacations
+      © {new Date().getFullYear()} ERP/CMMS
       {appEnv && <span className="ml-2 opacity-50">[{appEnv}]</span>}
     </footer>
   );

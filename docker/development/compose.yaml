@@ -1,6 +1,7 @@
 services:
   my-app-development:
     dns:
+      - 127.0.0.11
       - 8.8.8.8
       - 8.8.4.4
     build:

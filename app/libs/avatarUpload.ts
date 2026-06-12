@@ -19,6 +19,7 @@ const REQUEST_AVATAR_UPLOAD_URL = gql`
 const CONFIRM_AVATAR_UPLOAD = gql`
   mutation ConfirmAvatarUpload($key: String!, $targetUserId: String) {
     confirmAvatarUpload(key: $key, targetUserId: $targetUserId) {
+      id
       avatar
     }
   }
@@ -35,11 +36,11 @@ export function useRequestAvatarUploadUrl(): useMutation.ResultTuple<
 }
 
 export function useConfirmAvatarUpload(): useMutation.ResultTuple<
-  { confirmAvatarUpload: { avatar: string | null } },
+  { confirmAvatarUpload: { id: string; avatar: string | null } },
   { key: string; targetUserId?: string }
 > {
   return useMutation<
-    { confirmAvatarUpload: { avatar: string | null } },
+    { confirmAvatarUpload: { id: string; avatar: string | null } },
     { key: string; targetUserId?: string }
   >(CONFIRM_AVATAR_UPLOAD);
 }

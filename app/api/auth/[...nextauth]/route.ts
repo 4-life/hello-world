@@ -82,14 +82,20 @@ export const authOptions: AuthOptions = {
     },
 
     async jwt({ token, user }) {
-      if (user) {
+      if (user || !token.userId) {
         const repo = db.getRepository(User);
-        const dbUser = user.email
+        const dbUser = user?.email
           ? await repo.findOne({ where: { email: user.email } })
-          : await repo.findOne({ where: { id: user.id } });
+          : user?.id
+            ? await repo.findOne({ where: { id: user.id } })
+            : token.email
+              ? await repo.findOne({ where: { email: token.email } })
+              : null;
 
         token.userId = dbUser?.id;
         token.role = dbUser?.role;
+        token.firstName = dbUser?.firstName;
+        token.lastName = dbUser?.lastName;
       }
 
       return token;
@@ -100,6 +106,8 @@ export const authOptions: AuthOptions = {
         ...(session?.user ?? {}),
         userId: token.userId!,
         role: token.role,
+        firstName: token.firstName,
+        lastName: token.lastName,
       };
       return session;
     },

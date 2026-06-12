@@ -1,7 +1,6 @@
 import getUser from '@/app/libs/getUser';
-import { calcAvailableDays } from '@/app/libs/vacationDays';
-import VacationCalendar from '@/components/VacationCalendar';
 import AvatarSection from '@/components/AvatarSection';
+import EditProfileDialog from '@/components/EditProfileDialog';
 
 interface Props {
   userId: string;
@@ -17,25 +16,20 @@ export default async function ProfileView({
   }
 
   const user = data.user;
-  const availableVacationDays = calcAvailableDays(
-    user.startWorkDate,
-    user.vacations,
-  );
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
+    <div className="p-6">
       <h1 className="mb-6 text-2xl font-semibold">Profile</h1>
 
-      <div className="flex flex-col gap-6 lg:flex-row">
-        <div className="rounded-lg border p-6 space-y-4 lg:w-80 lg:shrink-0">
-          <AvatarSection
-            userId={user.id}
-            initialAvatarUrl={user.avatar}
-            login={user.login}
-            firstName={user.firstName}
-            lastName={user.lastName}
-          />
-
+      <div className="flex flex-col items-start gap-6 sm:flex-row">
+        <AvatarSection
+          userId={user.id}
+          initialAvatarUrl={user.avatar}
+          login={user.login}
+          firstName={user.firstName}
+          lastName={user.lastName}
+        />
+        <div className="w-full rounded-lg border p-6 space-y-4 lg:w-80">
           <div className="flex flex-col gap-4 text-sm">
             <div>
               <span className="text-muted-foreground text-xs">Login</span>
@@ -69,29 +63,18 @@ export default async function ProfileView({
           </div>
 
           <div className="flex flex-col gap-2 text-sm">
-            <span className="text-muted-foreground">Hired</span>
+            <span className="text-muted-foreground">Created</span>
             <p>{new Date(user.createdDate).toISOString().slice(0, 10)}</p>
           </div>
-        </div>
 
-        <div className="flex flex-1 flex-col gap-6">
-          {availableVacationDays !== null && (
-            <div className="rounded-lg border p-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                Available vacation days
-              </p>
-              <p className="mt-1 text-6xl font-bold">{availableVacationDays}</p>
-            </div>
-          )}
-
-          <div>
-            <h2 className="mb-4 text-lg font-semibold">Vacations</h2>
-            <VacationCalendar
-              vacations={user.vacations}
-              availableDays={availableVacationDays ?? 0}
-              userId={userId}
-            />
-          </div>
+          <EditProfileDialog
+            userId={user.id}
+            firstName={user.firstName}
+            lastName={user.lastName}
+            email={user.email}
+            phone={user.phone}
+            role={user.role}
+          />
         </div>
       </div>
     </div>

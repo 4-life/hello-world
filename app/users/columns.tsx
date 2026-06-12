@@ -6,7 +6,9 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { UsersQuery } from '@/app/libs/getUsers';
-import { calcAvailableDays } from '@/app/libs/vacationDays';
+import { formatDate } from '@/app/orders/format';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getInitials } from '@/lib/utils';
 
 function SortableHeader({
   field,
@@ -55,6 +57,21 @@ type UserRow = UsersQuery['users']['items'][number];
 
 export const columns: ColumnDef<UserRow>[] = [
   {
+    id: 'avatar',
+    header: '',
+    cell: ({ row }) => {
+      const { firstName, lastName, login, avatar } = row.original;
+      const initials = getInitials(firstName, lastName, login);
+
+      return (
+        <Avatar>
+          {avatar && <AvatarImage src={avatar} alt={login} />}
+          <AvatarFallback>{initials}</AvatarFallback>
+        </Avatar>
+      );
+    },
+  },
+  {
     accessorKey: 'login',
     header: 'Login',
     cell: ({ row }) => (
@@ -87,29 +104,8 @@ export const columns: ColumnDef<UserRow>[] = [
     cell: ({ row }) => <span className="capitalize">{row.original.role}</span>,
   },
   {
-    id: 'availableVacationDays',
-    header: 'Available vacation days',
-    cell: ({ row }) => {
-      const days = calcAvailableDays(
-        row.original.startWorkDate,
-        row.original.vacations,
-      );
-      return days ?? '—';
-    },
-  },
-  {
-    accessorKey: 'startWorkDate',
-    header: () => (
-      <SortableHeader field="startWorkDate" label="Start work date" />
-    ),
-    cell: ({ row }) =>
-      row.original.startWorkDate
-        ? new Date(row.original.startWorkDate).toLocaleDateString()
-        : '—',
-  },
-  {
     accessorKey: 'createdDate',
     header: () => <SortableHeader field="createdDate" label="Created date" />,
-    cell: ({ row }) => new Date(row.original.createdDate).toLocaleDateString(),
+    cell: ({ row }) => formatDate(row.original.createdDate),
   },
 ];

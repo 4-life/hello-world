@@ -30,7 +30,7 @@ export default function LoginForm(): React.JSX.Element {
           : 'Invalid login or password',
       );
     } else {
-      window.location.href = '/users';
+      window.location.href = '/orders';
     }
   }
 

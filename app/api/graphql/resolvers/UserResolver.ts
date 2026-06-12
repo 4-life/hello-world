@@ -90,7 +90,6 @@ export class UserResolver {
       skip,
       take: pagination?.limit ?? 10,
       order: { [field]: order },
-      relations: ['vacations'],
     });
 
     return { items, total };
@@ -104,7 +103,6 @@ export class UserResolver {
 
     const user = await this.repo.findOne({
       where: { id },
-      relations: ['vacations'],
     });
     if (user)
       await cache.set(userKey(id), JSON.stringify(user), { ttl: USER_TTL });

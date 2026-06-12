@@ -5,9 +5,7 @@ import {
   BeforeInsert,
   BeforeUpdate,
   Index,
-  OneToMany,
 } from 'typeorm';
-import type { Relation } from 'typeorm';
 import {
   ObjectType,
   Field,
@@ -27,7 +25,6 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { SortOrder } from './SortOrder';
-import { Vacation } from './Vacation';
 import { UserRole } from './UserRole';
 
 registerEnumType(UserRole, {
@@ -79,21 +76,6 @@ export class User {
     default: UserRole.USER,
   })
   role: UserRole;
-
-  @Field(() => [Vacation])
-  @OneToMany(() => Vacation, (vacation) => vacation.user)
-  vacations: Relation<Vacation>[];
-
-  @Field({ nullable: true })
-  @Column({
-    type: 'date',
-    nullable: true,
-    transformer: {
-      to: (v: Date) => v,
-      from: (v: string) => (v ? new Date(v) : null),
-    },
-  })
-  startWorkDate?: Date;
 
   @Field()
   @Column({ type: 'timestamp' })
@@ -175,22 +157,31 @@ export class UpdateUserInput {
   role?: UserRole;
 
   @Field(() => String, { nullable: true })
+  @IsString()
+  @MaxLength(100)
+  @IsOptional()
   firstName?: string;
 
   @Field(() => String, { nullable: true })
+  @IsString()
+  @MaxLength(100)
+  @IsOptional()
   lastName?: string;
 
   @Field(() => String, { nullable: true })
+  @IsEmail({}, { message: 'Invalid email address' })
+  @IsOptional()
+  @MaxLength(255)
   email?: string;
 
   @Field(() => String, { nullable: true })
+  @IsString()
+  @ValidateIf((o: UpdateUserInput) => !!o.phone)
+  @Matches(/^\+?[\d\s\-().]{7,20}$/, { message: 'Invalid phone number' })
   phone?: string;
 
   @Field(() => String, { nullable: true })
   avatar?: string;
-
-  @Field(() => Date, { nullable: true })
-  startWorkDate?: Date;
 }
 
 @InputType('UsersFilter')
@@ -212,7 +203,7 @@ export class UsersFilter {
 }
 
 export enum UserSortField {
-  startWorkDate = 'startWorkDate',
+  login = 'login',
   createdDate = 'createdDate',
 }
 
