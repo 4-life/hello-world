@@ -51,7 +51,7 @@ export default function CreateUserDialog(): React.JSX.Element {
     value: string,
   ): void {
     setValues((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
+    if (Object.hasOwn(errors, name)) {
       setErrors((prev: FieldErrors) => ({ ...prev, [name]: undefined }));
     }
   }

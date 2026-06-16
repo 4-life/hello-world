@@ -21,18 +21,21 @@ interface Props {
   lastName?: string | null;
 }
 
-const EXT_TO_MIME: Record<string, string> = {
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-  png: 'image/png',
-  webp: 'image/webp',
-};
-
 function resolveContentType(file: File): string {
   if (file.type === 'image/jpg') return 'image/jpeg';
   if (file.type) return file.type;
-  const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
-  return EXT_TO_MIME[ext] ?? '';
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'webp':
+      return 'image/webp';
+    default:
+      return '';
+  }
 }
 
 function AvatarDisplay({

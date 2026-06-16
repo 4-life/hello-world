@@ -32,10 +32,12 @@ export async function getApolloServer(): Promise<ApolloServer> {
 
         if (!raw?.length) return formatted;
 
-        const fields: Record<string, string> = {};
-        raw.forEach(({ property, constraints }) => {
-          fields[property] = Object.values(constraints)[0];
-        });
+        const fields = Object.fromEntries(
+          raw.map(({ property, constraints }) => [
+            property,
+            Object.values(constraints)[0],
+          ]),
+        );
 
         return {
           ...formatted,
