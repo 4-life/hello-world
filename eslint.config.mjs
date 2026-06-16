@@ -2,6 +2,7 @@ import nextConfig from 'eslint-config-next/core-web-vitals';
 import prettierConfig from 'eslint-config-prettier';
 import prettierPlugin from 'eslint-plugin-prettier';
 import requireExplicitGenerics from 'eslint-plugin-require-explicit-generics';
+import security from 'eslint-plugin-security';
 import { requireTypegraphqlExplicitName } from './eslint-rules/require-typegraphql-explicit-name.mjs';
 
 /** @type {import('eslint').Linter.Config[]} */
@@ -19,6 +20,9 @@ export default [
 
   // Next.js flat config — registers react, react-hooks, import, @typescript-eslint, etc.
   ...nextConfig,
+
+  // Security rules
+  security.configs.recommended,
 
   // Disable rules that conflict with Prettier
   prettierConfig,
