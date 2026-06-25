@@ -23,9 +23,13 @@ export async function proxy(req: NextRequest): Promise<NextResponse> {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
+  if (!token) {
+    return NextResponse.redirect(new URL('/', req.url));
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/', '/users/:path*', '/pay/:path*'],
+  matcher: ['/((?!_next/static|_next/image|favicon\\.ico|api).*)'],
 };
