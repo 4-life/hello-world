@@ -53,7 +53,7 @@ export class Client {
   address?: string;
 
   @Field(() => [Invoice])
-  @OneToMany('Invoice', (invoice: Invoice) => invoice.client)
+  @OneToMany('invoices', (invoice: Invoice) => invoice.client)
   invoices: Relation<Invoice>[];
 
   @Field()

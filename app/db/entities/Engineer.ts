@@ -63,11 +63,11 @@ export class Engineer {
   isActive: boolean;
 
   @Field(() => [Order])
-  @OneToMany('Order', (order: Order) => order.engineer)
+  @OneToMany('orders', (order: Order) => order.engineer)
   orders: Relation<Order>[];
 
   @Field(() => [EngineerStock])
-  @OneToMany('EngineerStock', (stock: EngineerStock) => stock.engineer)
+  @OneToMany('engineer_stock', (stock: EngineerStock) => stock.engineer)
   stock: Relation<EngineerStock>[];
 
   @Field()

@@ -30,7 +30,7 @@ export class Part {
   description?: string;
 
   @Field(() => [EngineerStock])
-  @OneToMany('EngineerStock', (stock: EngineerStock) => stock.part)
+  @OneToMany('engineer_stock', (stock: EngineerStock) => stock.part)
   stock: Relation<EngineerStock>[];
 
   @Field()

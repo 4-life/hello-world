@@ -23,14 +23,14 @@ export class EngineerStock {
   id: string;
 
   @Field(() => Engineer)
-  @ManyToOne('Engineer', (engineer: Engineer) => engineer.stock, {
+  @ManyToOne('engineers', (engineer: Engineer) => engineer.stock, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'engineerId' })
   engineer: Relation<Engineer>;
 
   @Field(() => Part)
-  @ManyToOne('Part', (part: Part) => part.stock, { onDelete: 'CASCADE' })
+  @ManyToOne('parts', (part: Part) => part.stock, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'partId' })
   part: Relation<Part>;
 

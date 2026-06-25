@@ -73,7 +73,7 @@ export class Order {
   notes?: string;
 
   @Field(() => Engineer, { nullable: true })
-  @ManyToOne('Engineer', (engineer: Engineer) => engineer.orders, {
+  @ManyToOne('engineers', (engineer: Engineer) => engineer.orders, {
     nullable: true,
     onDelete: 'SET NULL',
   })
@@ -81,7 +81,7 @@ export class Order {
   engineer?: Relation<Engineer> | null;
 
   @Field(() => Invoice, { nullable: true })
-  @OneToOne('Invoice', (invoice: Invoice) => invoice.order)
+  @OneToOne('invoices', (invoice: Invoice) => invoice.order)
   invoice?: Relation<Invoice> | null;
 
   @Field()

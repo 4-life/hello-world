@@ -47,14 +47,14 @@ export class Invoice {
   invoiceNumber: number;
 
   @Field(() => Client)
-  @ManyToOne('Client', (client: Client) => client.invoices, {
+  @ManyToOne('clients', (client: Client) => client.invoices, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'clientId' })
   client: Relation<Client>;
 
   @Field(() => Order, { nullable: true })
-  @OneToOne('Order', (order: Order) => order.invoice, {
+  @OneToOne('orders', (order: Order) => order.invoice, {
     nullable: true,
     onDelete: 'SET NULL',
   })
