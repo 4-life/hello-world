@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 // import path from 'path';
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['typeorm', 'reflect-metadata', 'pg'],
   // Recommended: this will reduce output
   // Docker image size by 80%+
   output: 'standalone',
