@@ -1,3 +1,9 @@
+export enum OrderType {
+  INSTALLATION = 'installation',
+  MAINTENANCE = 'maintenance',
+  REPAIR = 'repair',
+}
+
 export enum OrderStatus {
   NEW = 'new',
   SCHEDULED = 'scheduled',

@@ -1,5 +1,5 @@
 import type { ChangeEvent } from 'react';
-import { PaymentStatus } from '@/app/db/entities/PaymentStatus';
+import { PaymentStatus } from '@/app/db/entities/invoice/Invoice.types';
 import type { CreateInvoiceFormValues } from '@/app/libs/createInvoiceSchema';
 import { formatLabel } from '@/app/orders/statusBadge';
 import { DatePicker } from '@/components/ui/date-picker';

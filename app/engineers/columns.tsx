@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
-import { OrderStatus } from '@/app/db/entities/OrderStatus';
+import { OrderStatus } from '@/app/db/entities/order/Order.types';
 import { EngineersQuery } from '@/app/libs/getEngineers';
 
 function SortableHeader({

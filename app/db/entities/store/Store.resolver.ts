@@ -19,7 +19,7 @@ import {
   EngineerStock,
   SetStockInput,
 } from '@/app/db/entities';
-import type { Engineer } from '@/app/db/entities/Engineer';
+import type { Engineer } from '@/app/db/entities/engineer/Engineer.entity';
 
 @Resolver(EngineerStock)
 export class StoreResolver {

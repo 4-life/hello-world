@@ -1,20 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  BeforeInsert,
-  BeforeUpdate,
-  OneToMany,
-} from 'typeorm';
-import type { Relation } from 'typeorm';
-import {
-  ObjectType,
-  Field,
-  ID,
-  InputType,
-  Int,
-  registerEnumType,
-} from 'type-graphql';
+import { InputType, Field, registerEnumType } from 'type-graphql';
 import {
   IsBoolean,
   IsEmail,
@@ -25,70 +9,7 @@ import {
   MaxLength,
   ValidateIf,
 } from 'class-validator';
-import { Order } from './Order';
-import { EngineerStock } from './EngineerStock';
-import { SortOrder } from './SortOrder';
-
-@ObjectType('Engineer', {
-  description: 'Field engineers who can be assigned to orders.',
-})
-@Entity({ name: 'engineers' })
-export class Engineer {
-  @Field(() => ID)
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Field()
-  @Column({ type: 'varchar', length: 100 })
-  firstName: string;
-
-  @Field()
-  @Column({ type: 'varchar', length: 100 })
-  lastName: string;
-
-  @Field({ nullable: true })
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  phone?: string;
-
-  @Field({ nullable: true })
-  @Column({ type: 'varchar', length: 200, nullable: true })
-  email?: string;
-
-  @Field({ nullable: true })
-  @Column({ type: 'varchar', length: 200, nullable: true })
-  specialization?: string;
-
-  @Field()
-  @Column({ type: 'boolean', default: true })
-  isActive: boolean;
-
-  @Field(() => [Order])
-  @OneToMany('orders', (order: Order) => order.engineer)
-  orders: Relation<Order>[];
-
-  @Field(() => [EngineerStock])
-  @OneToMany('engineer_stock', (stock: EngineerStock) => stock.engineer)
-  stock: Relation<EngineerStock>[];
-
-  @Field()
-  @Column({ type: 'timestamp' })
-  createdDate: Date;
-
-  @Field()
-  @Column({ type: 'timestamp' })
-  updatedDate: Date;
-
-  @BeforeInsert()
-  createDates(): void {
-    this.createdDate = new Date();
-    this.updatedDate = new Date();
-  }
-
-  @BeforeUpdate()
-  updateDates(): void {
-    this.updatedDate = new Date();
-  }
-}
+import { SortOrder } from '../SortOrder';
 
 @InputType('CreateEngineerInput')
 export class CreateEngineerInput {
@@ -177,13 +98,4 @@ export class EngineersSortInput {
 
   @Field(() => SortOrder)
   order: SortOrder = SortOrder.ASC;
-}
-
-@ObjectType('PaginatedEngineersResponse')
-export class PaginatedEngineersResponse {
-  @Field(() => [Engineer])
-  items: Engineer[];
-
-  @Field(() => Int)
-  total: number;
 }

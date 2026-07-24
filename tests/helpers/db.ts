@@ -1,8 +1,8 @@
 import { db, dbInit } from '@/app/db/db';
-import { User } from '@/app/db/entities/User';
-import { UserRole } from '@/app/db/entities/UserRole';
-import { Engineer } from '@/app/db/entities/Engineer';
-import { Client } from '@/app/db/entities/Client';
+import { User } from '@/app/db/entities/user/User.entity';
+import { UserRole } from '@/app/db/entities/user/User.types';
+import { Engineer } from '@/app/db/entities/engineer/Engineer.entity';
+import { Client } from '@/app/db/entities/client/Client.entity';
 import bcrypt from 'bcrypt';
 
 export async function ensureDb(): Promise<void> {

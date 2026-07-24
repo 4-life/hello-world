@@ -8,10 +8,9 @@ import {
   BeforeUpdate,
 } from 'typeorm';
 import type { Relation } from 'typeorm';
-import { ObjectType, Field, ID, InputType, Int } from 'type-graphql';
-import { IsInt, Min } from 'class-validator';
-import { Engineer } from './Engineer';
-import { Part } from './Part';
+import { ObjectType, Field, ID, Int } from 'type-graphql';
+import { Engineer } from '../engineer/Engineer.entity';
+import { Part } from './Part.entity';
 
 @ObjectType('EngineerStock', {
   description: 'Stock level of a part held by an engineer.',
@@ -51,23 +50,4 @@ export class EngineerStock {
   updateDates(): void {
     this.updatedDate = new Date();
   }
-}
-
-@InputType('SetStockInput')
-export class SetStockInput {
-  @Field(() => String)
-  engineerId: string;
-
-  @Field(() => String)
-  partId: string;
-
-  @Field(() => Int)
-  @IsInt()
-  @Min(0)
-  quantity: number;
-
-  @Field(() => Int)
-  @IsInt()
-  @Min(0)
-  minQuantity: number;
 }

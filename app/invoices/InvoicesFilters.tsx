@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
-import { PaymentStatus } from '@/app/db/entities/PaymentStatus';
+import { PaymentStatus } from '@/app/db/entities/invoice/Invoice.types';
 import { formatLabel } from '@/app/orders/statusBadge';
 
 interface ClientOption {

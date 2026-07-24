@@ -1,5 +1,5 @@
 import type { ChangeEvent } from 'react';
-import { UserRole } from '@/app/db/entities/UserRole';
+import { UserRole } from '@/app/db/entities/user/User.types';
 import type { CreateUserFormValues } from '@/app/libs/createUserSchema';
 import { Input } from '@/components/ui/input';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';

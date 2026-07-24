@@ -2,8 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
-import { OrderType } from '@/app/db/entities/OrderType';
-import { OrderStatus } from '@/app/db/entities/OrderStatus';
+import { OrderType, OrderStatus } from '@/app/db/entities/order/Order.types';
 import { formatLabel } from '@/app/orders/statusBadge';
 
 interface EngineerOption {

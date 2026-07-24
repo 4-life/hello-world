@@ -1,13 +1,13 @@
-import { AuthChecker, buildSchema } from 'type-graphql';
+import { AuthChecker, buildSchema, registerEnumType } from 'type-graphql';
 import { type GraphQLSchema } from 'graphql';
-import { UserResolver } from './resolvers/UserResolver';
-import { NotificationResolver } from './resolvers/NotificationResolver';
-import { OrderResolver } from './resolvers/OrderResolver';
-import { EngineerResolver } from './resolvers/EngineerResolver';
-import { StoreResolver } from './resolvers/StoreResolver';
-import { DashboardResolver } from './resolvers/DashboardResolver';
-import { ClientResolver } from './resolvers/ClientResolver';
-import { InvoiceResolver } from './resolvers/InvoiceResolver';
+import { UserResolver } from '@/app/db/entities/user/User.resolver';
+import { NotificationResolver } from '@/app/db/entities/notification/Notification.resolver';
+import { OrderResolver } from '@/app/db/entities/order/Order.resolver';
+import { EngineerResolver } from '@/app/db/entities/engineer/Engineer.resolver';
+import { StoreResolver } from '@/app/db/entities/store/Store.resolver';
+import { DashboardResolver } from '@/app/db/entities/dashboard/Dashboard.resolver';
+import { ClientResolver } from '@/app/db/entities/client/Client.resolver';
+import { InvoiceResolver } from '@/app/db/entities/invoice/Invoice.resolver';
 import { Context } from '@/server/context';
 import {
   UsersFilter,
@@ -34,7 +34,10 @@ import {
   InvoicesSortInput,
   UpdateInvoiceInput,
   PaginatedInvoicesResponse,
+  SortOrder,
 } from '@/app/db/entities';
+
+registerEnumType(SortOrder, { name: 'SortOrder' });
 
 export const authChecker: AuthChecker<Context> = ({ context }, roles) => {
   if (!context.userId) return false;

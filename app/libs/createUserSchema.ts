@@ -1,4 +1,4 @@
-import { UserRole } from '../db/entities/UserRole';
+import { UserRole } from '../db/entities/user/User.types';
 
 export interface CreateUserFormValues {
   login: string;

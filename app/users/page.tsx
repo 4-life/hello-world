@@ -1,5 +1,5 @@
 import getUsers from '@/app/libs/getUsers';
-import { UserRole } from '@/app/db/entities/UserRole';
+import { UserRole } from '@/app/db/entities/user/User.types';
 import { UserSortField, SortOrder } from '@/app/db/entities';
 import { columns } from './columns';
 import { DataTable } from '@/components/DataTable';

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { PaymentStatus } from '@/app/db/entities/PaymentStatus';
+import { PaymentStatus } from '@/app/db/entities/invoice/Invoice.types';
 import { formatDate } from '@/app/orders/format';
 import { formatLabel, orderStatusVariant } from '@/app/orders/statusBadge';
 import type { InvoiceQuery } from '@/app/libs/getInvoice';

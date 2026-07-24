@@ -11,9 +11,9 @@ import {
   PaginatedInvoicesResponse,
   PaginationInput,
 } from '@/app/db/entities';
-import { PaymentStatus } from '@/app/db/entities/PaymentStatus';
-import type { Client } from '@/app/db/entities/Client';
-import type { Order } from '@/app/db/entities/Order';
+import { PaymentStatus } from '@/app/db/entities/invoice/Invoice.types';
+import type { Client } from '@/app/db/entities/client/Client.entity';
+import type { Order } from '@/app/db/entities/order/Order.entity';
 
 @Resolver(Invoice)
 export class InvoiceResolver {

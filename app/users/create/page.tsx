@@ -4,8 +4,8 @@ import { useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User } from '@/app/db/entities';
-import { UserRole } from '@/app/db/entities/UserRole';
+import type { User } from '@/app/db/entities';
+import { UserRole } from '@/app/db/entities/user/User.types';
 
 const CREATE_USER = gql`
   mutation CreateUser($data: CreateUserInput!) {

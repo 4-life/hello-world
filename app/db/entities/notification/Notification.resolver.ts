@@ -1,7 +1,7 @@
 import { Resolver, Query, Mutation, Ctx, Authorized } from 'type-graphql';
 import { IsNull } from 'typeorm';
 import { db } from '@/app/db/db';
-import { Notification } from '@/app/db/entities/Notification';
+import { Notification } from './Notification.entity';
 import type { Context } from '@/server/context';
 
 @Resolver(Notification)

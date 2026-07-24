@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { UserRole } from '@/app/db/entities/UserRole';
+import { UserRole } from '@/app/db/entities/user/User.types';
 import { useCallback } from 'react';
 
 export default function Filters(): React.JSX.Element {

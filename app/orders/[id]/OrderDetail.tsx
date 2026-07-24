@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { OrderStatus } from '@/app/db/entities/OrderStatus';
+import { OrderStatus } from '@/app/db/entities/order/Order.types';
 import { formatDate, formatTime } from '@/app/orders/format';
 import { formatLabel, paymentStatusVariant } from '@/app/orders/statusBadge';
 import type { OrderQuery } from '@/app/libs/getOrder';

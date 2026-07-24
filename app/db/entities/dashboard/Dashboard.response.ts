@@ -1,5 +1,5 @@
 import { ObjectType, Field, Int } from 'type-graphql';
-import { OrderStatus } from './OrderStatus';
+import { OrderStatus } from '../order/Order.types';
 
 @ObjectType('OrderStatusCount')
 export class OrderStatusCount {

@@ -1,5 +1,5 @@
-import { OrderStatus } from '@/app/db/entities/OrderStatus';
-import { PaymentStatus } from '@/app/db/entities/PaymentStatus';
+import { OrderStatus } from '@/app/db/entities/order/Order.types';
+import { PaymentStatus } from '@/app/db/entities/invoice/Invoice.types';
 import type { badgeVariants } from '@/components/ui/badge';
 import type { VariantProps } from 'class-variance-authority';
 

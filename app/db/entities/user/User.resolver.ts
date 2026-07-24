@@ -25,7 +25,7 @@ import {
   PaginatedUsersResponse,
   PaginationInput,
 } from '@/app/db/entities';
-import { UserRole } from '@/app/db/entities/UserRole';
+import { UserRole } from '@/app/db/entities/user/User.types';
 import type { Context } from '@/server/context';
 import { getApolloCache } from '@/server/cache';
 import type { FindOptionsWhere } from 'typeorm';
@@ -95,8 +95,14 @@ export class UserResolver {
     return { items, total };
   }
 
+  @Authorized()
   @Query(() => User, { nullable: true })
-  async user(@Arg('id') id: string): Promise<User | null> {
+  async user(@Ctx() ctx: Context, @Arg('id') id: string): Promise<User | null> {
+    const isSelf = id === ctx.userId;
+    if (!isSelf && ctx.role !== 'admin' && ctx.role !== 'manager') {
+      throw new Error('Not authorized to view other users');
+    }
+
     const cache = getApolloCache();
     const cached = await cache.get(userKey(id));
     if (cached) return JSON.parse(cached) as User;
@@ -117,14 +123,26 @@ export class UserResolver {
   ): Promise<User> {
     const targetId = data.id ?? ctx.userId!;
     const isOtherUser = targetId !== ctx.userId;
+    const isPrivileged = ctx.role === 'admin' || ctx.role === 'manager';
 
-    if (isOtherUser && ctx.role !== 'admin' && ctx.role !== 'manager') {
+    if (isOtherUser && !isPrivileged) {
       throw new Error('Not authorized to update other users');
     }
 
+    const { id: _, role, password, ...fields } = data;
+
+    if (role !== undefined && !isPrivileged) {
+      throw new Error('Not authorized to change role');
+    }
+
     const user = await this.repo.findOneByOrFail({ id: targetId });
-    const { id: _, ...fields } = data;
     Object.assign(user, fields);
+    if (isPrivileged && role !== undefined) {
+      user.role = role;
+    }
+    if (password) {
+      user.password = await bcrypt.hash(password, 10);
+    }
     const saved = await this.repo.save(user);
     await getApolloCache().delete(userKey(targetId));
     return saved;
@@ -180,7 +198,7 @@ export class UserResolver {
     return repo.save(user);
   }
 
-  @Authorized()
+  @Authorized('manager', 'admin')
   @Mutation(() => Boolean)
   async deleteUser(@Arg('id') id: string): Promise<boolean> {
     const user = await this.repo.findOne({ where: { id } });

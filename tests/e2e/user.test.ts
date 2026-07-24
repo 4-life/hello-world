@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { gql } from '../helpers/server';
 import { ensureDb, truncateAll, createUser } from '../helpers/db';
-import { UserRole } from '@/app/db/entities/UserRole';
+import { UserRole } from '@/app/db/entities/user/User.types';
 import { resetSignUpRateLimit } from '@/server/rateLimiter';
 
 const SIGN_UP = `
@@ -18,7 +18,7 @@ const GET_USER = `
 
 const UPDATE_PROFILE = `
   mutation UpdateProfile($data: UpdateUserInput!) {
-    updateProfile(data: $data) { id firstName }
+    updateProfile(data: $data) { id firstName role }
   }
 `;
 
@@ -57,16 +57,55 @@ describe('user', () => {
   });
 
   describe('user query', () => {
+    it('rejects unauthenticated requests', async () => {
+      const { errors } = await gql(GET_USER, { id: 'non-existent' });
+      expect(errors).toBeDefined();
+    });
+
     it('returns null for unknown id', async () => {
-      const { data } = await gql(GET_USER, { id: 'non-existent' });
+      const user = await createUser({ email: 'me@test.com' });
+      const { data } = await gql(
+        GET_USER,
+        { id: 'non-existent' },
+        { userId: user.id, role: UserRole.USER, ip: null },
+      );
       expect(data?.user).toBeNull();
     });
 
-    it('returns the user by id', async () => {
+    it('allows a user to view their own record', async () => {
       const user = await createUser({ email: 'me@test.com' });
-      const { data } = await gql(GET_USER, { id: user.id });
+      const { data } = await gql(
+        GET_USER,
+        { id: user.id },
+        { userId: user.id, role: UserRole.USER, ip: null },
+      );
       expect(data?.user.id).toBe(user.id);
       expect(data?.user.email).toBe('me@test.com');
+    });
+
+    it('prevents a regular user from viewing another user', async () => {
+      const me = await createUser({ email: 'me@test.com' });
+      const other = await createUser({ email: 'other@test.com' });
+      const { errors } = await gql(
+        GET_USER,
+        { id: other.id },
+        { userId: me.id, role: UserRole.USER, ip: null },
+      );
+      expect(errors?.[0].message).toMatch(/not authorized/i);
+    });
+
+    it('allows an admin to view any user', async () => {
+      const admin = await createUser({
+        email: 'admin@test.com',
+        role: UserRole.ADMIN,
+      });
+      const other = await createUser({ email: 'other@test.com' });
+      const { data } = await gql(
+        GET_USER,
+        { id: other.id },
+        { userId: admin.id, role: UserRole.ADMIN, ip: null },
+      );
+      expect(data?.user.id).toBe(other.id);
     });
   });
 
@@ -99,6 +138,30 @@ describe('user', () => {
         { userId: me.id, role: UserRole.USER },
       );
       expect(errors?.[0].message).toMatch(/not authorized/i);
+    });
+
+    it('prevents a regular user from escalating their own role', async () => {
+      const user = await createUser({ email: 'me@test.com' });
+      const { errors } = await gql(
+        UPDATE_PROFILE,
+        { data: { role: UserRole.ADMIN } },
+        { userId: user.id, role: UserRole.USER },
+      );
+      expect(errors?.[0].message).toMatch(/not authorized/i);
+    });
+
+    it('allows an admin to change a user role', async () => {
+      const admin = await createUser({
+        email: 'admin@test.com',
+        role: UserRole.ADMIN,
+      });
+      const user = await createUser({ email: 'user@test.com' });
+      const { data } = await gql(
+        UPDATE_PROFILE,
+        { data: { id: user.id, role: UserRole.MANAGER } },
+        { userId: admin.id, role: UserRole.ADMIN },
+      );
+      expect(data?.updateProfile.role).toBe(UserRole.MANAGER);
     });
 
     it('allows an admin to update any user', async () => {

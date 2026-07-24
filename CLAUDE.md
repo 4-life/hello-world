@@ -9,13 +9,18 @@ architecture and conventions below apply unless the project's own CLAUDE.md over
 
 One TypeScript class per entity, decorated for **TypeORM** (`@Entity`) and **TypeGraphQL**
 (`@ObjectType`/`@Field`) at once. The same class is imported in resolvers, server libs, and
-React components — no separate DTOs/generated types.
+React components — no separate DTOs/generated types. Each entity's resolver lives in the same
+folder as the entity, not in a separate `resolvers/` tree — a feature is one folder to open, not
+two.
 
 ```
-app/db/entities/User.ts
+app/db/entities/user/User.entity.ts
   ├─ @Entity()        → Postgres table (TypeORM)
   ├─ @ObjectType()    → GraphQL type (TypeGraphQL → Apollo)
   └─ import { User }  → React components & server libs
+
+app/db/entities/user/User.resolver.ts
+  └─ @Resolver(User)  → queries/mutations/field resolvers for User
 ```
 
 **Critical rule**: `@ObjectType(...)` / `@InputType(...)` must always have an explicit string
@@ -46,10 +51,28 @@ app/
   api/auth/            NextAuth route handler
   api/graphql/
     route.ts           Apollo handler (GET + POST)
-    schema.ts          buildGqlSchema() + authChecker
-    resolvers/         One resolver per entity (UserResolver, VacationResolver, ...)
+    schema.ts          buildGqlSchema() + authChecker, imports resolvers from db/entities/*
   db/
-    entities/          Single source of truth (TypeORM + TypeGraphQL), index.ts re-exports all
+    entities/          Single source of truth (TypeORM + TypeGraphQL), one folder per feature
+      user/            User.entity.ts + User.types.ts (UserRole) + User.inputs.ts +
+                        User.response.ts + User.resolver.ts
+      notification/    Notification.entity.ts + Notification.resolver.ts (no inputs yet)
+      engineer/        Engineer.entity.ts + Engineer.inputs.ts + Engineer.response.ts +
+                        Engineer.resolver.ts
+      order/           Order.entity.ts + Order.types.ts (OrderType, OrderStatus) +
+                        Order.inputs.ts + Order.response.ts + Order.resolver.ts
+      client/          Client.entity.ts + Client.inputs.ts + Client.response.ts +
+                        Client.resolver.ts
+      invoice/         Invoice.entity.ts + Invoice.types.ts (PaymentStatus) + Invoice.inputs.ts +
+                        Invoice.response.ts (PaginatedInvoicesResponse + InvoicePayment) +
+                        Invoice.resolver.ts
+      store/           Two entities behind one feature resolver: Part.entity.ts/.inputs.ts/
+                        .response.ts + EngineerStock.entity.ts/.inputs.ts + Store.resolver.ts
+      dashboard/       No entity — reporting only: Dashboard.response.ts (DashboardStats,
+                        OrderStatusCount) + Dashboard.resolver.ts
+      PaginatedResponse.ts   Generic PaginatedResponse<T>(ItemClass, typeName) factory
+      PaginationInput.ts, SortOrder.ts, UserRole.ts   Shared cross-entity types
+      index.ts         Barrel re-exports + TypeORM `entities` array
     migrations/        Plain .js migrations (no ts-node in prod)
     db.ts              TypeORM DataSource
     runMigrations.js
@@ -88,11 +111,35 @@ tests/e2e/             End-to-end tests (real DB/Redis)
 - GraphQL: queries/mutations defined with `gql` template literals colocated in `app/libs/*`,
   wrapped in React `cache()` for request-level memoization, `fetchPolicy: 'network-only'`.
 - Resolvers: `@Authorized('role', ...)` for access control; `authChecker` in
-  `app/api/graphql/schema.ts` checks `context.userId`/`context.role`.
+  `app/api/graphql/schema.ts` checks `context.userId`/`context.role`. Each resolver lives next
+  to its entity, e.g. `app/db/entities/user/User.resolver.ts`, and is registered by hand in
+  `app/api/graphql/schema.ts`.
 - Entities: TypeORM columns + `class-validator` decorators + TypeGraphQL `@Field`s on the
-  same property. Enums registered with `registerEnumType`. Filters/inputs (`UsersFilter`,
-  `PaginationInput`, etc.) live alongside the entity and are re-exported from
-  `app/db/entities/index.ts`.
+  same property. Filters/inputs (`UsersFilter`, `CreateOrderInput`, `PaginationInput`, etc.)
+  always live in `<Name>.inputs.ts`, never in the entity file itself — this holds from the first
+  input type, not just once a file gets large (see `User.inputs.ts`, `Order.inputs.ts`) — and
+  are re-exported from `app/db/entities/index.ts`.
+- **`<Entity>.types.ts` files must stay import-free.** All of an entity's plain enums live
+  together in one `<Entity>.types.ts` (e.g. `order/Order.types.ts` holds both `OrderType` and
+  `OrderStatus`; `user/User.types.ts` holds `UserRole`; `invoice/Invoice.types.ts` holds
+  `PaymentStatus`) — one file per entity, not one file per enum, and zero imports: no
+  `type-graphql`, no `registerEnumType` in these files. Several of these enums are imported
+  directly by `'use client'` components (e.g. `OrdersFilters.tsx`, `Filters.tsx`) for filter
+  dropdowns; `type-graphql`'s package barrel pulls in a `node:fs`-dependent helper
+  (`emitSchemaDefinitionFile.js`) regardless of which named export you use, so importing
+  `type-graphql` anywhere in a file reachable from a client component breaks the Turbopack/
+  webpack client build ("the chunking context does not support external modules (request:
+  node:fs)"). `registerEnumType(...)` is instead called inline in the server-only `*.entity.ts`
+  file, importing the enum from `./<Entity>.types` (`User.entity.ts` registers `UserRole`,
+  `Order.entity.ts` registers `OrderType`+`OrderStatus`, `Invoice.entity.ts` registers
+  `PaymentStatus`); `SortOrder` has no single owning entity, so it registers in
+  `app/api/graphql/schema.ts` instead. When adding a new enum, follow this split — never put
+  `registerEnumType` in `<Entity>.types.ts` itself unless you've confirmed nothing client-side
+  ever imports that file as a runtime value (not just `import type`).
+- Paginated list responses: use `PaginatedResponse(ItemClass, 'PaginatedXsResponse')` from
+  `app/db/entities/PaginatedResponse.ts` rather than hand-writing a `{ items, total }` class —
+  see `User.response.ts`. The type name must always be passed explicitly (same reason as the
+  `@ObjectType`/`@InputType` rule below — never rely on a class's own `.name`).
 - Migrations are plain `.js` (not `.ts`) so production doesn't need `ts-node`.
 
 ## Commands
@@ -122,8 +169,8 @@ tests/e2e/             End-to-end tests (real DB/Redis)
 
 - Rename `hello-world` everywhere: `package.json` name, `docker/*/compose.yaml` image names,
   GHCR refs in `.github/workflows/*.yml`, README badges/links, `deploy.sh` repo URL.
-- Add/remove entities under `app/db/entities/`, keep them re-exported from
-  `app/db/entities/index.ts`, add matching resolver under `app/api/graphql/resolvers/` and
-  register it in `app/api/graphql/schema.ts`.
+- Add/remove entities as a folder under `app/db/entities/<name>/` (`<Name>.entity.ts` +
+  `<Name>.resolver.ts`), keep the entity re-exported and added to the `entities` array in
+  `app/db/entities/index.ts`, and register the resolver in `app/api/graphql/schema.ts`.
 - New env vars go to GitHub Secrets/Variables for each environment, never hardcoded.
 - New endpoints: confirm `@Authorized()` is applied where required.

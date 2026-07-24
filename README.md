@@ -9,14 +9,13 @@ A self-hosted Next.js application with a single source of truth for all layers �
 
 ## Key idea: one type, all layers
 
-Every entity in [`app/db/entities/`](app/db/entities/) is decorated for both **TypeORM** (database) and **TypeGraphQL** (API), and the same TypeScript class is imported directly in React components and server actions.
+Every entity in [`app/db/entities/`](app/db/entities/) is decorated for both **TypeORM** (database) and **TypeGraphQL** (API), and the same TypeScript class is imported directly in React components and server actions. Its resolver lives right next to it, so a feature is one folder, not three:
 
 ```
-app/db/entities/User.ts
-        │
-        ├─ @Entity()          ──▶  PostgreSQL table  (TypeORM)
-        ├─ @ObjectType()      ──▶  GraphQL type       (TypeGraphQL → Apollo)
-        └─ import { User }    ──▶  React components & server libs
+app/db/entities/user/
+        ├─ User.entity.ts       Entity: @Entity() → Postgres table, @ObjectType() → GraphQL type
+        ├─ User.resolver.ts     @Resolver(): queries, mutations, field resolvers for User
+        └─ import { User }      ──▶  React components & server libs
 ```
 
 No separate DTO, schema file, or generated code — add a field once and it propagates everywhere.
@@ -24,7 +23,7 @@ No separate DTO, schema file, or generated code — add a field once and it prop
 ### Entity example
 
 ```ts
-// app/db/entities/User.ts
+// app/db/entities/user/User.entity.ts
 
 @ObjectType('User')          // ← GraphQL type (TypeGraphQL → Apollo)
 @Entity({ name: 'users' })   // ← PostgreSQL table (TypeORM)
@@ -72,12 +71,19 @@ export class UsersFilter {
 │   │   ├── auth/          NextAuth route handler
 │   │   └── graphql/
 │   │       ├── route.ts               Apollo handler (GET + POST)
-│   │       ├── schema.ts              buildGqlSchema()
-│   │       └── resolvers/
-│   │           ├── ...                API crud handlers
+│   │       └── schema.ts              buildGqlSchema() — wires up resolvers below
 │   ├── db/
-│   │   ├── entities/      Single source of truth (TypeORM + TypeGraphQL)
-│   │   │   ├── ...        Entities models
+│   │   ├── entities/      Single source of truth (TypeORM + TypeGraphQL), one folder per entity
+│   │   │   ├── <entity>/               See app/db/entities/ for the shipped examples
+│   │   │   │   ├── <Entity>.entity.ts     Entity only (TypeORM + TypeGraphQL)
+│   │   │   │   ├── <Entity>.types.ts      Plain enums for this entity — zero imports, see below
+│   │   │   │   ├── <Entity>.inputs.ts     @InputType()s — only once the entity has any
+│   │   │   │   ├── <Entity>.response.ts   Paginated response, if the entity has a list query
+│   │   │   │   └── <Entity>.resolver.ts   Queries/mutations
+│   │   │   ├── PaginatedResponse.ts   Generic PaginatedResponse<T>(ItemClass, typeName) factory
+│   │   │   ├── PaginationInput.ts     Shared cross-entity input/enum
+│   │   │   ├── SortOrder.ts
+│   │   │   └── index.ts               Barrel + TypeORM entities array
 │   │   ├── migrations/    Plain JS migrations (no ts-node in prod)
 │   │   ├── db.ts          TypeORM DataSource
 │   │   └── runMigrations.js
@@ -99,6 +105,32 @@ export class UsersFilter {
 └── .github/workflows/
     └── deploy.yml         checks (lint + type-check) → deploy
 ```
+
+Adding a new entity: create `app/db/entities/<entity>/<Entity>.entity.ts` (entity only — no
+`@InputType`s or response classes mixed in) and `app/db/entities/<entity>/<Entity>.resolver.ts`
+(resolver), re-export the entity from `app/db/entities/index.ts` and add it to the `entities`
+array there, then register the resolver in `app/api/graphql/schema.ts`. As soon as the entity
+needs any `@InputType`, put it in `<Entity>.inputs.ts`, not in the entity file — this applies
+from the first input type, not just once the file gets big, so every entity's file layout stays
+predictable; an entity with no inputs simply has no `.inputs.ts` file yet. For a paginated list
+response, reuse `PaginatedResponse(ItemClass, 'Paginated<Entities>Response')` from
+[`PaginatedResponse.ts`](app/db/entities/PaginatedResponse.ts) in a `<Entity>.response.ts`
+instead of writing a new `{ items, total }` class by hand. See
+[`app/db/entities/user/`](app/db/entities/user/) or
+[`app/db/entities/order/`](app/db/entities/order/) for worked examples of this layout. Not every
+folder is a 1:1 TypeORM entity — [`app/db/entities/store/`](app/db/entities/store/) holds two
+closely related entities (`Part`, `EngineerStock`) behind one `Store.resolver.ts`, and
+[`app/db/entities/dashboard/`](app/db/entities/dashboard/) is a reporting resolver with no
+entity at all. Group by feature; split resolvers only when the entities inside a folder are
+genuinely independent.
+
+If the entity has any plain enums (e.g. a status field), put them together in one
+`<Entity>.types.ts` with **zero imports** — no `type-graphql`. Filter dropdowns in
+`'use client'` components often import these enums directly for their values, and
+`type-graphql`'s package barrel drags in a `node:fs`-dependent helper regardless of which
+export you use, which breaks the browser build if it ends up in a client-reachable file. Call
+`registerEnumType(...)` inline in `<Entity>.entity.ts` instead (importing the enum from
+`./<Entity>.types`) — that file is never imported by client components.
 
 ## Development
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { gql } from '../helpers/server';
 import { ensureDb, truncateAll, createUser, createClient } from '../helpers/db';
-import { UserRole } from '@/app/db/entities/UserRole';
+import { UserRole } from '@/app/db/entities/user/User.types';
 
 const INVOICES = `
   query Invoices {
