@@ -1,6 +1,6 @@
 import { addUserAction } from './actions';
 import { db } from './db';
-import { User } from './entities/User';
+import { User } from './entities/user/User.entity';
 
 export const dynamic = 'force-dynamic';
 

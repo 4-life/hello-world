@@ -1,8 +1,9 @@
 import { Resolver, Query, Mutation, Arg, Ctx } from 'type-graphql';
 import { db } from '@/app/db/db';
-import { Vacation, CreateVacationInput } from '@/app/db/entities/Vacation';
-import { Notification } from '@/app/db/entities/Notification';
-import { User } from '@/app/db/entities/User';
+import { Vacation } from './Vacation.entity';
+import { CreateVacationInput } from './Vacation.inputs';
+import { Notification } from '../notification/Notification.entity';
+import { User } from '../user/User.entity';
 import { calcAvailableDays } from '@/app/libs/vacationDays';
 import { notifier } from '@/server/notifier';
 import { getApolloCache } from '@/server/cache';

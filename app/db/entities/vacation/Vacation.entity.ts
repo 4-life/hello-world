@@ -6,8 +6,8 @@ import {
   JoinColumn,
 } from 'typeorm';
 import type { Relation } from 'typeorm';
-import { ObjectType, Field, ID, InputType } from 'type-graphql';
-import { User } from './User';
+import { ObjectType, Field, ID } from 'type-graphql';
+import { User } from '../user/User.entity';
 
 @ObjectType('Vacation')
 @Entity({ name: 'vacations' })
@@ -37,20 +37,5 @@ export class Vacation {
 
   @Field({ nullable: true })
   @Column({ type: 'text', nullable: true })
-  info?: string;
-}
-
-@InputType('CreateVacationInput')
-export class CreateVacationInput {
-  @Field()
-  userId: string;
-
-  @Field()
-  startDate: Date;
-
-  @Field()
-  endDate: Date;
-
-  @Field({ nullable: true })
   info?: string;
 }

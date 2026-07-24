@@ -1,12 +1,16 @@
-import { User } from './User';
-import { Vacation } from './Vacation';
-import { Notification } from './Notification';
+import { User } from './user/User.entity';
+import { Vacation } from './vacation/Vacation.entity';
+import { Notification } from './notification/Notification.entity';
 import './PaginationInput';
 import './SortOrder';
+import './UserRole';
 
-export * from './User';
-export * from './Vacation';
-export * from './Notification';
+export * from './user/User.entity';
+export * from './user/User.inputs';
+export * from './user/User.response';
+export * from './vacation/Vacation.entity';
+export * from './vacation/Vacation.inputs';
+export * from './notification/Notification.entity';
 export * from './PaginationInput';
 export * from './SortOrder';
 

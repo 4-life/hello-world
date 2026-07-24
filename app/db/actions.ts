@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from './db';
-import { User } from './entities/User';
+import { User } from './entities/user/User.entity';
 
 export async function addUserAction(formData: FormData): Promise<void> {
   const usersRepo = await db.getRepository(User);

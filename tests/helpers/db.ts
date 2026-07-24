@@ -1,5 +1,5 @@
 import { db, dbInit } from '@/app/db/db';
-import { User } from '@/app/db/entities/User';
+import { User } from '@/app/db/entities/user/User.entity';
 import { UserRole } from '@/app/db/entities/UserRole';
 import bcrypt from 'bcrypt';
 

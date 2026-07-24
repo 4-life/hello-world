@@ -1,8 +1,8 @@
 import { AuthChecker, buildSchema } from 'type-graphql';
 import { type GraphQLSchema } from 'graphql';
-import { UserResolver } from './resolvers/UserResolver';
-import { VacationResolver } from './resolvers/VacationResolver';
-import { NotificationResolver } from './resolvers/NotificationResolver';
+import { UserResolver } from '@/app/db/entities/user/User.resolver';
+import { VacationResolver } from '@/app/db/entities/vacation/Vacation.resolver';
+import { NotificationResolver } from '@/app/db/entities/notification/Notification.resolver';
 import { Context } from '@/server/context';
 import {
   UsersFilter,

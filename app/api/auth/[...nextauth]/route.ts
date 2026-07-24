@@ -3,7 +3,7 @@ import GithubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { db } from '@/app/db/db';
-import { User } from '@/app/db/entities/User';
+import { User } from '@/app/db/entities/user/User.entity';
 import * as bcrypt from 'bcrypt';
 import { checkSignInRateLimit } from '@/server/rateLimiter';
 
