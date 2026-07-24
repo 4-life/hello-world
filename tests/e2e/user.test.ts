@@ -144,7 +144,7 @@ describe('user', () => {
       const user = await createUser({ email: 'me@test.com' });
       const { errors } = await gql(
         UPDATE_PROFILE,
-        { data: { role: UserRole.ADMIN } },
+        { data: { role: 'ADMIN' } },
         { userId: user.id, role: UserRole.USER },
       );
       expect(errors?.[0].message).toMatch(/not authorized/i);
@@ -158,10 +158,10 @@ describe('user', () => {
       const user = await createUser({ email: 'user@test.com' });
       const { data } = await gql(
         UPDATE_PROFILE,
-        { data: { id: user.id, role: UserRole.MANAGER } },
+        { data: { id: user.id, role: 'MANAGER' } },
         { userId: admin.id, role: UserRole.ADMIN },
       );
-      expect(data?.updateProfile.role).toBe(UserRole.MANAGER);
+      expect(data?.updateProfile.role).toBe('MANAGER');
     });
 
     it('allows an admin to update any user', async () => {
