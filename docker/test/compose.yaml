@@ -1,0 +1,30 @@
+# Mirrors the Postgres/Redis "services:" block from .github/workflows/e2e.yml
+# so `npm run test:e2e` hits the same env locally as it does in CI. Ephemeral
+# (tmpfs) on purpose — this is scratch data for test runs, not the dev DB from
+# docker/development/compose.yaml (which uses a different POSTGRES_DB/volume).
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: test_hello_world
+    ports:
+      - '5432:5432'
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
