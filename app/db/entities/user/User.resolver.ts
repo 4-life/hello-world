@@ -27,12 +27,14 @@ import {
 } from '@/app/db/entities';
 import { UserRole } from '@/app/db/entities/UserRole';
 import type { Context } from '@/server/context';
-import { getApolloCache } from '@/server/cache';
+import { assertSelfOrPrivileged } from '@/server/authz';
+import {
+  getCachedUser,
+  setCachedUser,
+  invalidateUserCache,
+} from './User.cache';
 import type { FindOptionsWhere } from 'typeorm';
 import { ILike } from 'typeorm';
-
-const USER_TTL = 300;
-const userKey = (id: string): string => `user:${id}`;
 import {
   isAllowedAvatarContentType,
   buildAvatarKey,
@@ -90,7 +92,7 @@ export class UserResolver {
       skip,
       take: pagination?.limit ?? 10,
       order: { [field]: order },
-      relations: ['vacations'],
+      relations: { vacations: true },
     });
 
     return { items, total };
@@ -98,16 +100,14 @@ export class UserResolver {
 
   @Query(() => User, { nullable: true })
   async user(@Arg('id') id: string): Promise<User | null> {
-    const cache = getApolloCache();
-    const cached = await cache.get(userKey(id));
-    if (cached) return JSON.parse(cached) as User;
+    const cached = await getCachedUser(id);
+    if (cached) return cached;
 
     const user = await this.repo.findOne({
       where: { id },
-      relations: ['vacations'],
+      relations: { vacations: true },
     });
-    if (user)
-      await cache.set(userKey(id), JSON.stringify(user), { ttl: USER_TTL });
+    if (user) await setCachedUser(user);
     return user;
   }
 
@@ -118,17 +118,13 @@ export class UserResolver {
     @Arg('data') data: UpdateUserInput,
   ): Promise<User> {
     const targetId = data.id ?? ctx.userId!;
-    const isOtherUser = targetId !== ctx.userId;
-
-    if (isOtherUser && ctx.role !== 'admin' && ctx.role !== 'manager') {
-      throw new Error('Not authorized to update other users');
-    }
+    assertSelfOrPrivileged(ctx, targetId);
 
     const user = await this.repo.findOneByOrFail({ id: targetId });
     const { id: _, ...fields } = data;
     Object.assign(user, fields);
     const saved = await this.repo.save(user);
-    await getApolloCache().delete(userKey(targetId));
+    await invalidateUserCache(targetId);
     return saved;
   }
 
@@ -189,7 +185,7 @@ export class UserResolver {
     if (!user) return false;
 
     await this.repo.remove(user);
-    await getApolloCache().delete(userKey(id));
+    await invalidateUserCache(id);
     return true;
   }
 
@@ -208,14 +204,7 @@ export class UserResolver {
     targetUserId?: string,
   ): Promise<AvatarUploadResponse> {
     const targetId = targetUserId ?? ctx.userId!;
-
-    if (
-      targetId !== ctx.userId &&
-      ctx.role !== 'admin' &&
-      ctx.role !== 'manager'
-    ) {
-      throw new Error('Not authorized to update other users');
-    }
+    assertSelfOrPrivileged(ctx, targetId);
 
     if (!isAllowedAvatarContentType(contentType)) {
       throw new Error(
@@ -238,14 +227,7 @@ export class UserResolver {
     targetUserId?: string,
   ): Promise<User> {
     const targetId = targetUserId ?? ctx.userId!;
-
-    if (
-      targetId !== ctx.userId &&
-      ctx.role !== 'admin' &&
-      ctx.role !== 'manager'
-    ) {
-      throw new Error('Not authorized to update other users');
-    }
+    assertSelfOrPrivileged(ctx, targetId);
 
     if (!key.startsWith(`avatars/${targetId}/`)) {
       throw new Error('Invalid key');
@@ -267,7 +249,7 @@ export class UserResolver {
     }
 
     await this.repo.update({ id: targetId }, { avatar: key });
-    await getApolloCache().delete(userKey(targetId));
+    await invalidateUserCache(targetId);
     return this.repo.findOneByOrFail({ id: targetId });
   }
 }

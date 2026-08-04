@@ -2,14 +2,11 @@ import { Resolver, Query, Mutation, Arg, Ctx } from 'type-graphql';
 import { db } from '@/app/db/db';
 import { Vacation } from './Vacation.entity';
 import { CreateVacationInput } from './Vacation.inputs';
-import { Notification } from '../notification/Notification.entity';
 import { User } from '../user/User.entity';
-import { calcAvailableDays } from '@/app/libs/vacationDays';
-import { notifier } from '@/server/notifier';
-import { getApolloCache } from '@/server/cache';
+import { invalidateUserCache } from '../user/User.cache';
+import { createNotification } from '../notification/Notification.service';
+import { calcAvailableDays, countDaysInclusive } from '@/app/libs/vacationDays';
 import type { Context } from '@/server/context';
-
-const userKey = (id: string): string => `user:${id}`;
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString('en-GB', {
@@ -17,17 +14,6 @@ function formatDate(date: Date): string {
     month: 'short',
     year: 'numeric',
   });
-}
-
-async function saveNotification(
-  userId: string,
-  message: string,
-): Promise<void> {
-  const notification = db
-    .getRepository(Notification)
-    .create({ userId, message });
-  await db.getRepository(Notification).save(notification);
-  notifier.emit(`user:${userId}`, { message });
 }
 
 @Resolver(Vacation)
@@ -49,16 +35,16 @@ export class VacationResolver {
   ): Promise<boolean> {
     const vacation = await this.repo.findOne({
       where: { id },
-      relations: ['user'],
+      relations: { user: true },
     });
     if (!vacation) return false;
 
     const vacationUserId = vacation.user.id;
     await this.repo.remove(vacation);
-    await getApolloCache().delete(userKey(vacationUserId));
+    await invalidateUserCache(vacationUserId);
 
     if (ctx.userId && ctx.userId !== vacationUserId) {
-      void saveNotification(
+      void createNotification(
         vacationUserId,
         `Your vacation from ${formatDate(vacation.startDate)} to ${formatDate(vacation.endDate)} was removed.`,
       );
@@ -72,16 +58,14 @@ export class VacationResolver {
     @Arg('data') data: CreateVacationInput,
     @Ctx() ctx: Context,
   ): Promise<Vacation> {
-    const user = await db
-      .getRepository(User)
-      .findOneOrFail({ where: { id: data.userId }, relations: ['vacations'] });
+    const user = await db.getRepository(User).findOneOrFail({
+      where: { id: data.userId },
+      relations: { vacations: true },
+    });
 
     const available =
       calcAvailableDays(user.startWorkDate, user.vacations) ?? 0;
-    const newStart = new Date(data.startDate);
-    const newEnd = new Date(data.endDate);
-    const requested =
-      Math.round((newEnd.getTime() - newStart.getTime()) / 86_400_000) + 1;
+    const requested = countDaysInclusive(data.startDate, data.endDate);
 
     if (requested > available) {
       throw new Error(
@@ -96,12 +80,12 @@ export class VacationResolver {
       info: data.info,
     });
     const saved = await this.repo.save(vacation);
-    await getApolloCache().delete(userKey(data.userId));
+    await invalidateUserCache(data.userId);
 
     if (ctx.userId && ctx.userId !== data.userId) {
-      void saveNotification(
+      void createNotification(
         data.userId,
-        `A vacation from ${formatDate(newStart)} to ${formatDate(newEnd)} was added to your schedule.`,
+        `A vacation from ${formatDate(data.startDate)} to ${formatDate(data.endDate)} was added to your schedule.`,
       );
     }
 

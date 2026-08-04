@@ -4,13 +4,9 @@ import { useState, type JSX } from 'react';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { CameraIcon } from 'lucide-react';
-import { toast } from 'sonner';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import UploadDialog from '@/components/UploadDialog';
-import {
-  useConfirmAvatarUpload,
-  useRequestAvatarUploadUrl,
-} from '@/app/libs/avatarUpload';
+import { useAvatarUpload } from '@/app/hooks/useAvatarUpload';
 
 interface Props {
   userId: string;
@@ -18,23 +14,6 @@ interface Props {
   login: string;
   firstName?: string | null;
   lastName?: string | null;
-}
-
-function resolveContentType(file: File): string {
-  if (file.type === 'image/jpg') return 'image/jpeg';
-  if (file.type) return file.type;
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  switch (ext) {
-    case 'jpg':
-    case 'jpeg':
-      return 'image/jpeg';
-    case 'png':
-      return 'image/png';
-    case 'webp':
-      return 'image/webp';
-    default:
-      return '';
-  }
 }
 
 function AvatarDisplay({
@@ -74,42 +53,8 @@ export default function AvatarSection({
   const isOwner =
     (session?.user as { userId?: string } | undefined)?.userId === userId;
 
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(
-    initialAvatarUrl ?? null,
-  );
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-
-  const [requestUploadUrl] = useRequestAvatarUploadUrl();
-  const [confirmUpload] = useConfirmAvatarUpload();
-
-  async function handleUpload(file: File): Promise<void> {
-    try {
-      const contentType = resolveContentType(file);
-      const { data: urlData } = await requestUploadUrl({
-        variables: { contentType, targetUserId: userId },
-      });
-      if (!urlData) throw new Error('Failed to get upload URL');
-
-      const { uploadUrl, key } = urlData.requestAvatarUploadUrl;
-
-      const res = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': contentType },
-      });
-      if (!res.ok) throw new Error('Upload to storage failed');
-
-      const { data: confirmData } = await confirmUpload({
-        variables: { key, targetUserId: userId },
-      });
-      const newUrl = confirmData?.confirmAvatarUpload.avatar;
-      if (newUrl) setAvatarUrl(newUrl);
-
-      toast.success('Avatar updated');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Upload failed');
-    }
-  }
+  const { avatarUrl, upload } = useAvatarUpload(userId, initialAvatarUrl);
 
   const initials =
     [firstName, lastName]
@@ -151,7 +96,7 @@ export default function AvatarSection({
         description="JPG, PNG or WebP · max 5 MB"
         accept="image/jpeg,image/png,image/webp"
         preview="image"
-        onUpload={handleUpload}
+        onUpload={upload}
       />
     </>
   );

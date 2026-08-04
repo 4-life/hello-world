@@ -3,14 +3,20 @@ interface VacationRange {
   endDate: Date | string;
 }
 
+export function countDaysInclusive(
+  startDate: Date | string,
+  endDate: Date | string,
+): number {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  return Math.round((end.getTime() - start.getTime()) / 86_400_000) + 1;
+}
+
 export function countUsedDays(vacations: VacationRange[]): number {
-  return vacations.reduce((total, v) => {
-    const start = new Date(v.startDate);
-    const end = new Date(v.endDate);
-    return (
-      total + Math.round((end.getTime() - start.getTime()) / 86_400_000) + 1
-    );
-  }, 0);
+  return vacations.reduce(
+    (total, v) => total + countDaysInclusive(v.startDate, v.endDate),
+    0,
+  );
 }
 
 export function calcAvailableDays(
